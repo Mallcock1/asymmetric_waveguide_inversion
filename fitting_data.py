@@ -23,11 +23,15 @@ yb_pix = np.array([24.75,27.25,29.5,31.5,31,31.75,32.25,33.75,34,34.5,34.75,30,
 #width_pix[11] = 0.5*(width_pix[12] + width_pix[10])
 #yb_pix[11] = 0.5*(yb_pix[12] + yb_pix[10])
 
+cad = 7.68 #temporal cadence of the ROSA instrument in s
+t_start = 1000 + 19*cad
+
 class fibril:
     def __init__(self, yb, yt):
         self.yb = yb
         self.yt = yt      
-    
+        self.t_vals = t_start + np.arange(len(self.yb)) * cad * 2 #because there is one yellow bar per 2 pixels
+        self.t_vals_cont = np.linspace(t_start, self.t_vals[-1], 1000) 
     
     #convert units from pixels to km
     def pix_to_km(self):
@@ -65,25 +69,20 @@ class fibril:
     
     #fit a sinusoidal curve
     def sin_fitting(self, N=3, trend_type="poly"):
-        x_vals = np.arange(len(self.yb))
         def sin_func(x, a, b, c):
             return a * np.sin(b * x + c)
-        yb_params, yb_params_covariance = curve_fit(sin_func, x_vals, self.detrend(N, trend_type)[0], p0=[100, 0.1, 0])
-        yt_params, yt_params_covariance = curve_fit(sin_func, x_vals, self.detrend(N, trend_type)[1], p0=[100, 0.1, 0])
-        x_vals_cont = np.linspace(0, len(self.yb), 1000)
-        return [sin_func(x_vals_cont, yb_params[0], yb_params[1], yb_params[2]),
-                sin_func(x_vals_cont, yt_params[0], yt_params[1], yt_params[2])]
+        yb_params, yb_params_covariance = curve_fit(sin_func, self.t_vals, self.detrend(N, trend_type)[0], p0=[100, 0.01, 0])
+        yt_params, yt_params_covariance = curve_fit(sin_func, self.t_vals, self.detrend(N, trend_type)[1], p0=[100, 0.01, 0])
+        return [sin_func(self.t_vals_cont, yb_params[0], yb_params[1], yb_params[2]), yb_params,
+                sin_func(self.t_vals_cont, yt_params[0], yt_params[1], yt_params[2]), yt_params]
             
             
 yt_pix = yb_pix + width_pix
 
-#fibril1 = fibril(yb_pix[:22], yt_pix[:22] #works well with 3rd degree polynomial
+#fibril1 = fibril(yb_pix[:22], yt_pix[:22] #works well with 2nd degree polynomial
 fibril1 = fibril(yb_pix[:22], yt_pix[:22])
 fibril1.smooth([11])
 fibril1.pix_to_km()
-
-x_vals = np.arange(len(fibril1.yb))
-x_vals_cont = np.linspace(0, len(fibril1.yb), 1000)
 
 N=2
 
@@ -97,10 +96,15 @@ plt.figure()
 plt.plot(fibril1.detrend(N=N)[0])
 plt.plot(fibril1.detrend(N=N)[1])
 
-plt.figure()
-plt.plot(fibril1.detrend(N=N)[0])
-plt.plot(x_vals_cont, fibril1.sin_fitting(N=N)[0])
+sin_fit = fibril1.sin_fitting(N=N)
 
 plt.figure()
-plt.plot(fibril1.detrend(N=N)[1])
-plt.plot(x_vals_cont, fibril1.sin_fitting(N=N)[1])
+plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[0])
+plt.plot(fibril1.t_vals_cont, sin_fit[0])
+
+plt.figure()
+plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1])
+plt.plot(fibril1.t_vals_cont, sin_fit[2])
+
+print("\n" + "BOTTOM: Amp = " + str("%.4g" % abs(sin_fit[1][0])) + "km,  Freq = " + str("%.4g" % sin_fit[1][1]) + "s-1"
++ "\n\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + str("%.4g" % sin_fit[3][1]) + "s-1")

@@ -8,6 +8,7 @@ Created on Thu Oct 25 14:32:57 2018
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
+import alfven_speed_inversion as asi
 
 #width of fibril in pixels
 width_pix = np.array([16.25,14,11,7.5,8,7,7,5.75,7.5,8.5,9.25,20.25,11.5,11.5,
@@ -52,6 +53,10 @@ class fibril:
         polyb = np.poly1d(np.polyfit(x_vals, self.yb, N))
         polyt = np.poly1d(np.polyfit(x_vals, self.yt, N))
         return [polyb(x_vals), polyt(x_vals)]
+        
+    
+    def width(self, N=3):
+        return np.average(self.trend(N)[1] - self.trend(N)[0])
             
     
     #subtract the trend from the data
@@ -69,7 +74,7 @@ class fibril:
     
     #fit a sinusoidal curve
     def sin_fitting(self, N=3, trend_type="poly"):
-        def sin_func(x, a, b, c):
+        def sin_func(x, a, b, c): #a = amplitude, b = angular frequency
             return a * np.sin(b * x + c)
         yb_params, yb_params_covariance = curve_fit(sin_func, self.t_vals, self.detrend(N, trend_type)[0], p0=[100, 0.01, 0])
         yt_params, yt_params_covariance = curve_fit(sin_func, self.t_vals, self.detrend(N, trend_type)[1], p0=[100, 0.01, 0])
@@ -106,5 +111,23 @@ plt.figure()
 plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1])
 plt.plot(fibril1.t_vals_cont, sin_fit[2])
 
-print("\n" + "BOTTOM: Amp = " + str("%.4g" % abs(sin_fit[1][0])) + "km,  Freq = " + str("%.4g" % sin_fit[1][1]) + "s-1"
-+ "\n\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + str("%.4g" % sin_fit[3][1]) + "s-1")
+print("\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + str("%.4g" % sin_fit[3][1]) + "s-1"
++ "\n\n" + "BOTTOM: Amp = " + str("%.4g" % abs(sin_fit[1][0])) + "km,  Freq = " + str("%.4g" % sin_fit[1][1]) + "s-1" + "\n")
+
+
+##########################################################
+
+w = (sin_fit[1][1] + sin_fit[3][1]) / 2 #freq
+k = w / 87. #phase speed estimate frpmmorton 12 supp fig S5
+vA_guess = 100. #estimate from morton 12
+c0 = 10. # estimate given in Morton 12
+R1 = 0.2 #R1 := rho_1 / rho_0
+R2 = 0.1 #R2 := rho_2 / rho_0
+x0 = fibril1.width(N) / 2
+RA = sin_fit[3][0] / sin_fit[1][0]
+mode = "saus"
+
+vA_sol = asi.alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA, mode)
+print("vA ~ " + str(vA_sol))
+
+print("RA guess ~ " + str(np.real(asi.amp_ratio(w, k, vA_guess, c0, R1, R2, x0, mode))))

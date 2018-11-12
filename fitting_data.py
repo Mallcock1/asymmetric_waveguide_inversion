@@ -89,27 +89,50 @@ fibril1 = fibril(yb_pix[:22], yt_pix[:22])
 fibril1.smooth([11])
 fibril1.pix_to_km()
 
+fibril1_full = fibril(yb_pix, yt_pix)
+fibril1_full.smooth([11])
+fibril1_full.pix_to_km()
+
 N=2
-
-plt.figure()
-plt.plot(fibril1.yb)
-plt.plot(fibril1.yt)
-plt.plot(fibril1.trend(N=N)[0])
-plt.plot(fibril1.trend(N=N)[1])
-
-plt.figure()
-plt.plot(fibril1.detrend(N=N)[0])
-plt.plot(fibril1.detrend(N=N)[1])
 
 sin_fit = fibril1.sin_fitting(N=N)
 
-plt.figure()
-plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[0])
-plt.plot(fibril1.t_vals_cont, sin_fit[0])
+#plt.figure()
+#plt.errorbar(fibril1_full.t_vals, fibril1_full.yb, yerr=50, color='black')
+#plt.errorbar(fibril1_full.t_vals, fibril1_full.yt, yerr=50, color='black')
+#plt.plot(fibril1.t_vals, fibril1.trend(N=N)[0], color='red')
+#plt.plot(fibril1.t_vals, fibril1.trend(N=N)[1], color='red')
+#plt.xlabel("Time (s)")
+#plt.ylabel("Distance (km)")
+#plt.savefig("fibril1_full.png")
 
+#plt.figure()
+#plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[0])
+#plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1])
+#
+
+#
 plt.figure()
-plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1])
-plt.plot(fibril1.t_vals_cont, sin_fit[2])
+plt.errorbar(fibril1.t_vals, fibril1.detrend(N=N)[0], yerr=50, color='black')
+#plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[0], color='black')
+plt.plot(fibril1.t_vals_cont, sin_fit[0], color='red')
+#plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
+#plt.hlines(abs(sin_fit[1][0]), 1100, 1500, colors='red', linestyles='dashed')
+plt.ylim([-200,200])
+plt.xlabel("Time (s)")
+plt.ylabel("Distance (km)")
+plt.savefig("fibril1_detrend_b.png")
+##
+plt.figure()
+plt.errorbar(fibril1.t_vals, fibril1.detrend(N=N)[1], yerr=50, color='black')
+#plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1], color='black')
+plt.plot(fibril1.t_vals_cont, sin_fit[2], color='red')
+#plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
+#plt.hlines(abs(sin_fit[3][0]), 1100, 1500, colors='red', linestyles='dashed')
+plt.ylim([-200,200])
+plt.xlabel("Time (s)")
+plt.ylabel("Distance (km)")
+plt.savefig("fibril1_detrend_t.png")
 
 print("\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + str("%.4g" % sin_fit[3][1]) + "s-1"
 + "\n\n" + "BOTTOM: Amp = " + str("%.4g" % abs(sin_fit[1][0])) + "km,  Freq = " + str("%.4g" % sin_fit[1][1]) + "s-1" + "\n")
@@ -118,7 +141,7 @@ print("\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + 
 ##########################################################
 
 w = (sin_fit[1][1] + sin_fit[3][1]) / 2 #freq
-k = w / 87. #phase speed estimate frpmmorton 12 supp fig S5
+k = w / 71. #87. #phase speed estimate from morton 12 supp fig S5
 vA_guess = 100. #estimate from morton 12
 c0 = 10. # estimate given in Morton 12
 R1 = 0.2 #R1 := rho_1 / rho_0

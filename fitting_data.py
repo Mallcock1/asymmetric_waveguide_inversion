@@ -6,12 +6,11 @@ Created on Thu Oct 25 14:32:57 2018
 """
 
 import numpy as np
-from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import fibril_trend as ft
 import alfven_speed_inversion as asi
-            
-        
+
+
 # Width of fibril in pixels
 width_pix = np.array([16.25,14,11,7.5,8,7,7,5.75,7.5,8.5,9.25,20.25,11.5,11.5,
                       11.75,9.5,8.5,7.5,7.25,7.25,6.25,5.5,7,6.5,7.75,8,6.75,6,
@@ -24,25 +23,28 @@ yb_pix = np.array([24.75,27.25,29.5,31.5,31,31.75,32.25,33.75,34,34.5,34.75,30,
 
 yt_pix = yb_pix + width_pix
 
-cad = 7.68  # temporal cadence of the ROSA instrument in s
+cad = 7.68  # temporal resolution (cadence) of the ROSA instrument in s
 t_start = 1000 + 19*cad
 
-trend_values = 
+trend_range = [0, 22]
+#trend_range = None
 
 t_vals = (np.arange(len(yb_pix)) * cad * 2) + t_start
 
-fibril1 = ft.fibril(yb_pix[:22], yt_pix[:22])  # works well with 2 degree poly
+fibril1 = ft.Fibril(yb_pix, yt_pix, t_vals, trend_range=trend_range)  # works well with 2 degree poly
 fibril1.smooth([11])
 fibril1.pix_to_km()
-
-fibril1_full = ft.fibril(yb_pix, yt_pix)
-fibril1_full.smooth([11])
-fibril1_full.pix_to_km()
+#
+#fibril1_sub = ft.fibril(yb_pix[trend_values[0]:trend_values[1]],
+#                        yt_pix[trend_values[0]:trend_values[1]],
+#                        t_vals[trend_values[0]:trend_values[1]])
+#fibril1_sub.smooth([11])
+#fibril1_sub.pix_to_km()
 
 # Degree of the trend polynomial
 N = 2
-
-sin_fit = fibril1.sin_fitting(N=N, p0=[100, 0.1, 0.])
+p0 = [100., 0.01, 0.]
+sin_fit = fibril1.sin_fitting(N=N, p0=p0)
 
 #######Delete once fibril_trend is checked 
 ## Plot the top and bottom boundaries with overlayed trends
@@ -62,54 +64,48 @@ sin_fit = fibril1.sin_fitting(N=N, p0=[100, 0.1, 0.])
 #plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1])
 
 
-#
-plt.figure()
-plt.errorbar(fibril1.t_vals, fibril1.detrend(N=N)[0], yerr=50, color='black')
-#plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[0], color='black')
-plt.plot(fibril1.t_vals_cont, sin_fit[0], color='red')
-#plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
-#plt.hlines(abs(sin_fit[1][0]), 1100, 1500, colors='red', linestyles='dashed')
-plt.ylim([-200,200])
-plt.xlabel("Time (s)")
-plt.ylabel("Distance (km)")
-plt.savefig("fibril1_detrend_b.png")
-##
-plt.figure()
-plt.errorbar(fibril1.t_vals, fibril1.detrend(N=N)[1], yerr=50, color='black')
-#plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1], color='black')
-plt.plot(fibril1.t_vals_cont, sin_fit[2], color='red')
-#plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
-#plt.hlines(abs(sin_fit[3][0]), 1100, 1500, colors='red', linestyles='dashed')
-plt.ylim([-200,200])
-plt.xlabel("Time (s)")
-plt.ylabel("Distance (km)")
-plt.savefig("fibril1_detrend_t.png")
+########Delete once fibril_trend is checked 
+#plt.figure()
+#plt.errorbar(fibril1.t_vals, fibril1.detrend(N=N)[0], yerr=50, color='black')
+##plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[0], color='black')
+#plt.plot(fibril1.t_vals_cont, sin_fit[0], color='red')
+##plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
+##plt.hlines(abs(sin_fit[1][0]), 1100, 1500, colors='red', linestyles='dashed')
+#plt.ylim([-200,200])
+#plt.xlabel("Time (s)")
+#plt.ylabel("Distance (km)")
+#plt.savefig("fibril1_detrend_b.png")
+###
+#plt.figure()
+#plt.errorbar(fibril1.t_vals, fibril1.detrend(N=N)[1], yerr=50, color='black')
+##plt.plot(fibril1.t_vals, fibril1.detrend(N=N)[1], color='black')
+#plt.plot(fibril1.t_vals_cont, sin_fit[2], color='red')
+##plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
+##plt.hlines(abs(sin_fit[3][0]), 1100, 1500, colors='red', linestyles='dashed')
+#plt.ylim([-200,200])
+#plt.xlabel("Time (s)")
+#plt.ylabel("Distance (km)")
+#plt.savefig("fibril1_detrend_t.png")
 
-print("\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + str("%.4g" % sin_fit[3][1]) + "s-1"
-+ "\n\n" + "BOTTOM: Amp = " + str("%.4g" % abs(sin_fit[1][0])) + "km,  Freq = " + str("%.4g" % sin_fit[1][1]) + "s-1" + "\n")
+#print("\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + " km, Freq = " +
+#      "%.4g" % sin_fit[3][1] + " s-1" + "\n\n" + "BOTTOM: Amp = " +
+#      "%.4g" % abs(sin_fit[1][0]) + " km,  Freq = " +
+#      "%.4g" % sin_fit[1][1] + " s-1" + "\n")
 
 
 ##########################################################
 
-w = (sin_fit[1][1] + sin_fit[3][1]) / 2 #freq
-k = w / 71. #87. #phase speed estimate from morton 12 supp fig S5
-vA_guess = 100. #estimate from morton 12
-c0 = 10. # estimate given in Morton 12
-R1 = 0.2 #R1 := rho_1 / rho_0
-R2 = 0.1 #R2 := rho_2 / rho_0
-x0 = fibril1.width(N) / 2
-RA = sin_fit[3][0] / sin_fit[1][0]
+fibril1.trend_plot(N)
+fibril1.sin_fitting_plot(p0, N)
+
+vA_guess = 100.  # estimate from morton 12
+c0 = 10.  # estimate given in Morton 12
+R1 = 0.2  # R1 := rho_1 / rho_0
+R2 = 0.1  # R2 := rho_2 / rho_0
+c_phase = 71.
 mode = "saus"
 
-vA_sol = asi.alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA, mode)
-print("vA ~ " + str(vA_sol))
-
-print("RA guess ~ " + str(np.real(asi.amp_ratio(w, k, vA_guess, c0, R1, R2, x0, mode))))
-
-
-
-
-
+fibril1.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2, mode)
 
 
 
@@ -384,159 +380,159 @@ print("RA guess ~ " + str(np.real(asi.amp_ratio(w, k, vA_guess, c0, R1, R2, x0, 
 
 
 
-
-yb = [743.2236682664131,
- 991.8614522308072,
- 881.8147596969167,
- 1056.9047351777654,
- 1134.7313046032928,
- 987.7467736626846,
- 1151.5202730595072,
- 1189.835318226618,
- 1045.1070381110846,
- 1147.7058796758395,
- 1377.5524712238987,
- 1440.4657413538885,
- 1418.5870285354708,
- 1253.10542296539,
- 1235.3747408615347,
- 1157.7911499880506,
- 1094.8720022910343,
- 1084.953726669772,
- 1109.5478614192918,
- 1073.8630650931448,
- 1055.0850857946284,
- 1039.2006300869878,
- 1071.481554068373,
- 981.9051279796081,
- 829.366471095187,
- 790.0970757685475,
- 871.3840204065889,
- 822.4022679562662,
- 815.7178906295618,
- 816.9326312208963,
- 769.7179272822918,
- 820.0331120599675,
- 843.8076265796287,
- 835.090627160881,
- 830.3280508600757,
- 784.5851778322576,
- 822.2398619507769,
- 828.9004214118993,
- 843.5458384839708,
- 804.7532231897611,
- 734.0761235593882,
- 887.0619108983803,
- 883.4911899445658]
-
-yt = [2837.133940867595,
- 2775.5618890964174,
- 2758.0127280157667,
- 2737.7897138702756,
- 2789.484694663397,
- 2596.6094064268345,
- 2336.5390585753685,
- 2337.4323530221664,
- 2162.4998706300785,
- 2324.1565480271884,
- 2578.542590526814,
- 2690.9867649356383,
- 2712.550790427497,
- 2707.1927777796905,
- 2627.638288623935,
- 2687.5531837896624,
- 2448.0370551244255,
- 2277.1181927632606,
- 2121.6067633432685,
- 2145.409364637937,
- 1957.320558714092,
- 1963.6931435291406,
- 1750.644079420869,
- 1815.3579322938645,
- 1664.6849313230562,
- 1833.8474002695275,
- 1869.1652881884006,
- 1835.559215824414,
- 1921.9307475742746,
- 1720.6701563132392,
- 1546.8136377005528,
- 1450.466786469136,
- 1500.7918520500343,
- 1526.6388356829407,
- 1616.3791593470662,
- 1872.4126146509616,
- 1860.5447030306777,
- 1776.596882778248,
- 1775.1215258447176,
- 1699.6069573593586,
- 1700.084686363544,
- 1594.3533726967835,
- 1617.6993877802988]
-
-#fibril3 = fibril(yb_pix[:22], yt_pix[:22] #works well with 2nd degree polynomial
-fibril3 = fibril(yb[10:], yt[10:])
-#fibril3.smooth([24])
-#fibril3.pix_to_km()
-
-N=2
-
-sin_fit = fibril3.sin_fitting_3(N=N)
-
-plt.figure()
-plt.errorbar(fibril3.t_vals, fibril3.yb, yerr=50, color='black')
-plt.errorbar(fibril3.t_vals, fibril3.yt, yerr=50, color='black')
-plt.plot(fibril3.t_vals, fibril3.trend(N=N)[0], color='red')
-plt.plot(fibril3.t_vals, fibril3.trend(N=N)[1], color='red')
-plt.xlabel("Time (s)")
-plt.ylabel("Distance (km)")
-plt.savefig("fibril3_full.png")
-
-plt.figure()
-plt.plot(fibril3.t_vals_2, fibril3.detrend(N=N)[0])
-plt.plot(fibril3.t_vals_2, fibril3.detrend(N=N)[1])
-
-
 #
-plt.figure()
-plt.errorbar(fibril3.t_vals_2, fibril3.detrend(N=N)[0], yerr=50, color='black')
-#plt.plot(fibril3.t_vals, fibril3.detrend(N=N)[0], color='black')
-plt.plot(fibril3.t_vals_cont_2, sin_fit[0], color='red')
-#plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
-#plt.hlines(abs(sin_fit[1][0]), 1100, 1500, colors='red', linestyles='dashed')
-plt.ylim([-600,600])
-plt.xlabel("Time (s)")
-plt.ylabel("Distance (km)")
-plt.savefig("fibril3_detrend_b.png")
+#yb = [743.2236682664131,
+# 991.8614522308072,
+# 881.8147596969167,
+# 1056.9047351777654,
+# 1134.7313046032928,
+# 987.7467736626846,
+# 1151.5202730595072,
+# 1189.835318226618,
+# 1045.1070381110846,
+# 1147.7058796758395,
+# 1377.5524712238987,
+# 1440.4657413538885,
+# 1418.5870285354708,
+# 1253.10542296539,
+# 1235.3747408615347,
+# 1157.7911499880506,
+# 1094.8720022910343,
+# 1084.953726669772,
+# 1109.5478614192918,
+# 1073.8630650931448,
+# 1055.0850857946284,
+# 1039.2006300869878,
+# 1071.481554068373,
+# 981.9051279796081,
+# 829.366471095187,
+# 790.0970757685475,
+# 871.3840204065889,
+# 822.4022679562662,
+# 815.7178906295618,
+# 816.9326312208963,
+# 769.7179272822918,
+# 820.0331120599675,
+# 843.8076265796287,
+# 835.090627160881,
+# 830.3280508600757,
+# 784.5851778322576,
+# 822.2398619507769,
+# 828.9004214118993,
+# 843.5458384839708,
+# 804.7532231897611,
+# 734.0761235593882,
+# 887.0619108983803,
+# 883.4911899445658]
+#
+#yt = [2837.133940867595,
+# 2775.5618890964174,
+# 2758.0127280157667,
+# 2737.7897138702756,
+# 2789.484694663397,
+# 2596.6094064268345,
+# 2336.5390585753685,
+# 2337.4323530221664,
+# 2162.4998706300785,
+# 2324.1565480271884,
+# 2578.542590526814,
+# 2690.9867649356383,
+# 2712.550790427497,
+# 2707.1927777796905,
+# 2627.638288623935,
+# 2687.5531837896624,
+# 2448.0370551244255,
+# 2277.1181927632606,
+# 2121.6067633432685,
+# 2145.409364637937,
+# 1957.320558714092,
+# 1963.6931435291406,
+# 1750.644079420869,
+# 1815.3579322938645,
+# 1664.6849313230562,
+# 1833.8474002695275,
+# 1869.1652881884006,
+# 1835.559215824414,
+# 1921.9307475742746,
+# 1720.6701563132392,
+# 1546.8136377005528,
+# 1450.466786469136,
+# 1500.7918520500343,
+# 1526.6388356829407,
+# 1616.3791593470662,
+# 1872.4126146509616,
+# 1860.5447030306777,
+# 1776.596882778248,
+# 1775.1215258447176,
+# 1699.6069573593586,
+# 1700.084686363544,
+# 1594.3533726967835,
+# 1617.6993877802988]
+#
+##fibril3 = fibril(yb_pix[:22], yt_pix[:22] #works well with 2nd degree polynomial
+#fibril3 = fibril(yb[10:], yt[10:])
+##fibril3.smooth([24])
+##fibril3.pix_to_km()
+#
+#N=2
+#
+#sin_fit = fibril3.sin_fitting_3(N=N)
+#
+#plt.figure()
+#plt.errorbar(fibril3.t_vals, fibril3.yb, yerr=50, color='black')
+#plt.errorbar(fibril3.t_vals, fibril3.yt, yerr=50, color='black')
+#plt.plot(fibril3.t_vals, fibril3.trend(N=N)[0], color='red')
+#plt.plot(fibril3.t_vals, fibril3.trend(N=N)[1], color='red')
+#plt.xlabel("Time (s)")
+#plt.ylabel("Distance (km)")
+#plt.savefig("fibril3_full.png")
+#
+#plt.figure()
+#plt.plot(fibril3.t_vals_2, fibril3.detrend(N=N)[0])
+#plt.plot(fibril3.t_vals_2, fibril3.detrend(N=N)[1])
+#
+#
 ##
-plt.figure()
-plt.errorbar(fibril3.t_vals_2, fibril3.detrend(N=N)[1], yerr=50, color='black')
-#plt.plot(fibril3.t_vals, fibril3.detrend(N=N)[1], color='black')
-plt.plot(fibril3.t_vals_cont_2, sin_fit[2], color='red')
-#plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
-#plt.hlines(abs(sin_fit[3][0]), 1100, 1500, colors='red', linestyles='dashed')
-plt.ylim([-600,600])
-plt.xlabel("Time (s)")
-plt.ylabel("Distance (km)")
-plt.savefig("fibril3_detrend_t.png")
-
-print("\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + str("%.4g" % sin_fit[3][1]) + "s-1"
-+ "\n\n" + "BOTTOM: Amp = " + str("%.4g" % abs(sin_fit[1][0])) + "km,  Freq = " + str("%.4g" % sin_fit[1][1]) + "s-1" + "\n")
-
-
-##########################################################
-
-w = (sin_fit[1][1] + sin_fit[3][1]) / 2 #freq
-k = w / 71. #71 #87. #phase speed estimate from morton 12 supp fig S5
-vA_guess = 100. #estimate from morton 12
-c0 = 10. #estimate given in Morton 12
-R1 = 0.2 #R1 := rho_1 / rho_0
-R2 = 0.1 #R2 := rho_2 / rho_0
-x0 = fibril3.width(N) / 2
-RA = sin_fit[3][0] / sin_fit[1][0]
-mode = "saus"
-
-vA_sol = asi.alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA, mode)
-print("vA ~ " + str(vA_sol))
-
-print("RA guess ~ " + str(np.real(asi.amp_ratio(w, k, vA_guess, c0, R1, R2, x0, mode))))
+#plt.figure()
+#plt.errorbar(fibril3.t_vals_2, fibril3.detrend(N=N)[0], yerr=50, color='black')
+##plt.plot(fibril3.t_vals, fibril3.detrend(N=N)[0], color='black')
+#plt.plot(fibril3.t_vals_cont_2, sin_fit[0], color='red')
+##plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
+##plt.hlines(abs(sin_fit[1][0]), 1100, 1500, colors='red', linestyles='dashed')
+#plt.ylim([-600,600])
+#plt.xlabel("Time (s)")
+#plt.ylabel("Distance (km)")
+#plt.savefig("fibril3_detrend_b.png")
+###
+#plt.figure()
+#plt.errorbar(fibril3.t_vals_2, fibril3.detrend(N=N)[1], yerr=50, color='black')
+##plt.plot(fibril3.t_vals, fibril3.detrend(N=N)[1], color='black')
+#plt.plot(fibril3.t_vals_cont_2, sin_fit[2], color='red')
+##plt.hlines(0, 1100, 1500, colors='red', linestyles='dashed')
+##plt.hlines(abs(sin_fit[3][0]), 1100, 1500, colors='red', linestyles='dashed')
+#plt.ylim([-600,600])
+#plt.xlabel("Time (s)")
+#plt.ylabel("Distance (km)")
+#plt.savefig("fibril3_detrend_t.png")
+#
+#print("\n" + "TOP: Amp = " + str("%.4g" % abs(sin_fit[3][0])) + "km, Freq = " + str("%.4g" % sin_fit[3][1]) + "s-1"
+#+ "\n\n" + "BOTTOM: Amp = " + str("%.4g" % abs(sin_fit[1][0])) + "km,  Freq = " + str("%.4g" % sin_fit[1][1]) + "s-1" + "\n")
+#
+#
+###########################################################
+#
+#w = (sin_fit[1][1] + sin_fit[3][1]) / 2 #freq
+#k = w / 71. #71 #87. #phase speed estimate from morton 12 supp fig S5
+#vA_guess = 100. #estimate from morton 12
+#c0 = 10. #estimate given in Morton 12
+#R1 = 0.2 #R1 := rho_1 / rho_0
+#R2 = 0.1 #R2 := rho_2 / rho_0
+#x0 = fibril3.width(N) / 2
+#RA = sin_fit[3][0] / sin_fit[1][0]
+#mode = "saus"
+#
+#vA_sol = asi.alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA, mode)
+#print("vA ~ " + str(vA_sol))
+#
+#print("RA guess ~ " + str(np.real(asi.amp_ratio(w, k, vA_guess, c0, R1, R2, x0, mode))))
 

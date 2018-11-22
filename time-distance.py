@@ -22,126 +22,108 @@ warnings.filterwarnings("ignore")
 
 class Full_map:
     def __init__(self, file_path):
-        self.file_path = file_path
+        self.file_path = os.path.abspath(file_path)
 
-def listdir_fullpath(d):
+    def listdir_fullpath(d):
         return [os.path.join(d, f) for f in os.listdir(d)]
 
+    total_files = listdir_fullpath(location)
+    total_files = sorted(total_files)
 
-location = 'D:/my_work/projects/Asymmetric_slab/Application_to_observation/Morton_2012_data/rosa_data'
-file_path = os.path.abspath(location)
-total_files = listdir_fullpath(location)
-total_files = sorted(total_files)
+    if os.path.exists(file_path):
+        print("\nDirectory exists.. ")
+        #checking
+        counter = 0
+        for file in total_files:
+            if file.endswith("s"):
+                counter += 1
 
-if os.path.exists(file_path):
-    print("\nDirectory exists.. ")
-    #checking
-    counter = 0
-    for file in total_files:
-        if file.endswith("s"):
-            counter += 1
-
-if len(total_files) == counter:
-    print("\nTotal number of FITS files in this directory is %s. \n" % len(total_files))
+    if len(total_files) == counter:
+        print("\nTotal number of FITS files in this directory is %s. \n" % len(total_files))
 
 
-def createmapcube(file_path):
-    """
-    This function creates the data/map cube.
-
-    Inputs:
-        getmaps- whether you want to create the mapcube in the given directory.
-        plot- creates the standard plot of the first image.
-        basic_plot- same as above, but without axes and labels.
-        draw_grid- plots the solar longitude and latitude and the limb.
-        draw_limb- plots only the limb.
-        submap - whether you want to look at a specific region of interest.
-        vmin,vmax (optional) - intensity of images.
-
-    Example call:
-        >> [in]: from dtp import createmapcube
-        >> [in]: createmapcube(getmaps=True)
-    """
-    print("\nCreating datacube... ".format(len(total_files)))
-    return sunpy.map.Map(str(file_path) + '/*ts', sequence=True)
-
-    if len(total_maps) == len(total_files):
-        print("\nMapcube created.")
-    else:
-        raise Exception("The number of files does not equal the number of "
-                        "maps. Please create mapcube again.")
-
-
-total_maps = createmapcube(file_path)
-
-# slit coords in pixels
-# fibril2
-#slit_coords_x = [591, 580]
-#slit_coords_y = [265, 371]
-
-# fibril 1 (fig 4 morton)
-slit_coords_x = [425, 429]
-slit_coords_y = [646, 546]
-
-# fibril 3
-slit_coords_x = [775, 775]
-slit_coords_y = [430, 490]
+    def createmapcube(self):
+        """
+        This function creates the data/map cube.
+    
+        Inputs:
+            getmaps- whether you want to create the mapcube in the given directory.
+            plot- creates the standard plot of the first image.
+            basic_plot- same as above, but without axes and labels.
+            draw_grid- plots the solar longitude and latitude and the limb.
+            draw_limb- plots only the limb.
+            submap - whether you want to look at a specific region of interest.
+            vmin,vmax (optional) - intensity of images.
+    
+        Example call:
+            >> [in]: from dtp import createmapcube
+            >> [in]: createmapcube(getmaps=True)
+        """
+        print("\nCreating datacube... ".format(len(total_files)))
+        return sunpy.map.Map(str(self.file_path) + '/*ts', sequence=True)
+    
+        if len(total_maps) == len(total_files):
+            print("\nMapcube created.")
+        else:
+            raise Exception("The number of files does not equal the number of "
+                            "maps. Please create mapcube again.")
 
 
-def distancetime(xfinal, xinitial, yfinal, yinitial):
-    """
-    Distances in pixels
+    total_maps = createmapcube(file_path)
 
-    This function creates the distance-time plots along the slice coordiantes.
+    def distancetime(self, xfinal, xinitial, yfinal, yinitial):
+        """
+        Distances in pixels
 
-    Inputs:
-    getintens- whether to calculate the intensity values along the slice.
-    dt- whether you want to plot only distance time plot.
-    peaks, threhsold, box_size- finds the maximum intensity value on distance 
-                                time plots. (For time series analysis).
-    intensityslice - I = I(t,s(x,y)).
-    """
+        This function creates the distance-time plots along the slice coordiantes.
 
-    print("\nCalculating the intensity values along slit....")
+        Inputs:
+        getintens- whether to calculate the intensity values along the slice.
+        dt- whether you want to plot only distance time plot.
+        peaks, threhsold, box_size- finds the maximum intensity value on distance 
+                                    time plots. (For time series analysis).
+        intensityslice - I = I(t,s(x,y)).
+        """
 
-    intensity1 = []
+        print("\nCalculating the intensity values along slit....")
 
-    # Number of points we can interpolate along the slit.
-    num = np.sqrt((xfinal - xinitial)**2 + (yfinal - yinitial)**2)
-    print("num = " + str(num))
-    global x, y
-    x = np.linspace(xfinal, xinitial, num)
-    y = np.linspace(yfinal, yinitial, num)
+        intensity1 = []
 
-    for i, m in enumerate(total_maps):
-        intensity1.append(sc.ndimage.map_coordinates(np.transpose(m.data),
-                                                     np.vstack((x, y))))
-    cad = 7.68
-    global time
-    time = np.linspace(0, len(intensity1)*cad, len(intensity1))
+        # Number of points we can interpolate along the slit.
+        num = np.sqrt((xfinal - xinitial)**2 + (yfinal - yinitial)**2)
+        print("num = " + str(num))
+        
+        global x, y
+        x = np.linspace(xfinal, xinitial, num)
+        y = np.linspace(yfinal, yinitial, num)
+    
+        for i, m in enumerate(total_maps):
+            intensity1.append(sc.ndimage.map_coordinates(np.transpose(m.data),
+                                                         np.vstack((x, y))))
+        cad = 7.68
+        global time
+        time = np.linspace(0, len(intensity1)*cad, len(intensity1))
+    
+        global space
+        space = np.linspace(0, num*50., len(intensity1[0]))  # multiply by 50 to convert into km
+    
+        return np.array(intensity1)
 
-    global space
-    space = np.linspace(0, num*50., len(intensity1[0]))  # multiply by 50 to convert into km
+#################
+#        OPP EDIT FROM HERE
 
-    return np.array(intensity1)
-
-
-
-#time_window_frames = np.array([100,140]) #in frames 
-time_window_frames = np.array([132,175]) #in frames
-#time_window_frames = np.array([0,71]) #in frames (fibril2)
-#time_window_frames = np.array([119,220]) #in frames (fibril1 (fig 4 morton))
-
-time_window = time_window_frames * 7.68  # in s
-number_of_frames = time_window_frames[1] - time_window_frames[0]
-
-intensity1 = distancetime(xfinal=slit_coords_x[0], xinitial=slit_coords_x[1],
-                          yfinal=slit_coords_y[0], yinitial=slit_coords_y[1])
+    time_window = time_window_frames * 7.68  # in s
+    number_of_frames = time_window_frames[1] - time_window_frames[0]
+    
+    intensity1 = distancetime(xfinal=slit_coords_x[0], xinitial=slit_coords_x[1],
+                              yfinal=slit_coords_y[0], yinitial=slit_coords_y[1])
 
 print("\nSlicing intensity....")
 intensity_slice = -intensity1[181]
 plt.figure()
 plt.plot(intensity_slice)
+
+
 
 time_vals = np.linspace(time_window_frames[0], time_window_frames[1],
                         number_of_frames + 1)
@@ -167,7 +149,23 @@ for t in np.linspace(time_window_frames[0], time_window_frames[1] - 1, number_of
     boundary_x_vals_b.append((params[1] - np.sqrt(2*np.log(2))*params[2]) * 50)
 
 
-
+    def td_gauss_plot(self.savefig=None):
+        intensity1 = self.distancetime(xfinal=slit_coords_x[0],
+                                       xinitial=slit_coords_x[1],
+                                       yfinal=slit_coords_y[0],
+                                       yinitial=slit_coords_y[1])
+        plt.figure()
+        plt.imshow(intensity1.T[:, time_window_frames[0]:time_window_frames[1]],
+                   aspect='auto', interpolation=None, origin='lower',
+                   extent=[time_window[0], time_window[1],
+                           space.min(), space.max()])  # 1100, 1500 #To change x/y lims: add kwarg extent=[time_window[0], time_window[1], space.min(), space.max()]
+        plt.xlabel('Time (s)')
+        plt.ylabel('Distance (km)')
+        plt.plot(boundary_t_vals, boundary_x_vals_b, 'wo')
+        plt.plot(boundary_t_vals, boundary_x_vals_t, 'wo')
+        plt.ylim([space.min(), space.max()])
+        if savefig is not None:
+            plt.savefig(savefig)
 
 
 
@@ -196,15 +194,7 @@ for t in np.linspace(time_window_frames[0], time_window_frames[1] - 1, number_of
 
 
 
-plt.figure()
-plt.imshow(intensity1.T[:,time_window_frames[0]:time_window_frames[1]], 
-           aspect='auto', interpolation=None, origin='lower', extent=[time_window[0], time_window[1], space.min(), space.max()]) #1100, 1500 #To change x/y lims: add kwarg extent=[time_window[0], time_window[1], space.min(), space.max()]
-plt.xlabel('Time (s)')
-plt.ylabel('Distance (km)')
-plt.plot(boundary_t_vals, boundary_x_vals_b, 'wo')
-plt.plot(boundary_t_vals, boundary_x_vals_t, 'wo')
-plt.ylim([space.min(), space.max()])
-plt.savefig('fibril3_dt.png')
+
 
 ######################################
 

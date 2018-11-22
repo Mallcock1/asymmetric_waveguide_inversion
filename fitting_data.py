@@ -8,7 +8,7 @@ Created on Thu Oct 25 14:32:57 2018
 import numpy as np
 import matplotlib.pyplot as plt
 import fibril_trend as ft
-import alfven_speed_inversion as asi
+import time_distance as td
 
 
 # Width of fibril in pixels
@@ -106,6 +106,47 @@ c_phase = 71.
 mode = "saus"
 
 fibril1.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2, mode)
+
+###########################################################
+# Time distance plotting
+
+file_path = 'D:/my_work/projects/Asymmetric_slab/Application_to_observation/Morton_2012_data/rosa_data'
+
+# slit coords in pixels
+# fibril2
+#slit_coords_x = [591, 580]
+#slit_coords_y = [265, 371]
+
+# fibril 1 (fig 4 morton)
+slit_coords_x = [425, 429]
+slit_coords_y = [646, 546]
+
+# fibril 3
+slit_coords_x = [775, 775]
+slit_coords_y = [430, 490]
+
+
+#time_window_frames = np.array([100,140]) #in frames 
+time_window_frames = np.array([132,175]) #in frames
+#time_window_frames = np.array([0,71]) #in frames (fibril2)
+#time_window_frames = np.array([119,220]) #in frames (fibril1 (fig 4 morton))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -4,6 +4,7 @@ Created on Fri Nov 02 13:07:39 2018
 
 @author: Matt
 
+Inversion functions for the Alfven speed in a magnetic slab.
 """
 
 import numpy as np

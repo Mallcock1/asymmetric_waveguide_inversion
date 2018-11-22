@@ -1,8 +1,6 @@
 """
 Farhad Allian
-PhD Student
-School of Mathematics & Statistics
-Univesity of Sheffield (UK)
+
 
 """
 
@@ -15,7 +13,7 @@ import matplotlib.animation as animation
 import astropy.units as u
 from skimage import exposure
 import numpy as np
-from scipy import ndimage
+import scipy as sc
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -99,26 +97,25 @@ def distancetime(xfinal, xinitial, yfinal, yinitial):
     """
 
     print("\nCalculating the intensity values along slit....")
-    
+
     intensity1 = []
 
-    #Number of points we can interpolate along the slit.
+    # Number of points we can interpolate along the slit.
     num = np.sqrt((xfinal - xinitial)**2 + (yfinal - yinitial)**2)
     print("num = " + str(num))
-    global x,y
-    x,y = np.linspace(xfinal, xinitial, num), np.linspace(yfinal, yinitial, num) #changed the order of xp1,xp0 and yp1,yp0
+    global x, y
+    x = np.linspace(xfinal, xinitial, num)
+    y = np.linspace(yfinal, yinitial, num)
 
-      
-    for i in range(len(total_maps)):
-
-        intensity1.append(scipy.ndimage.map_coordinates(np.transpose(total_maps[i].data), np.vstack((x,y))))
-        
+    for i, m in enumerate(total_maps):
+        intensity1.append(sc.ndimage.map_coordinates(np.transpose(m.data),
+                                                     np.vstack((x, y))))
     cad = 7.68
     global time
     time = np.linspace(0, len(intensity1)*cad, len(intensity1))
 
     global space
-    space = np.linspace(0, num*50., len(intensity1[0]))  # multiply by 50 instead to convert into km
+    space = np.linspace(0, num*50., len(intensity1[0]))  # multiply by 50 to convert into km
 
     return np.array(intensity1)
 
@@ -131,19 +128,19 @@ time_window_frames = np.array([132,175]) #in frames
 
 time_window = time_window_frames * 7.68  # in s
 number_of_frames = time_window_frames[1] - time_window_frames[0]
-    
-   
+
 intensity1 = distancetime(xfinal=slit_coords_x[0], xinitial=slit_coords_x[1],
-             yfinal=slit_coords_y[0], yinitial=slit_coords_y[1],)
-#
+                          yfinal=slit_coords_y[0], yinitial=slit_coords_y[1])
 
 print("\nSlicing intensity....")
 intensity_slice = -intensity1[181]
 plt.figure()
 plt.plot(intensity_slice)
 
-time_vals = np.linspace(time_window_frames[0], time_window_frames[1], number_of_frames + 1)
-x_vals = np.arange(num) #num - 1
+time_vals = np.linspace(time_window_frames[0], time_window_frames[1],
+                        number_of_frames + 1)
+# s is the coordinate along the slit
+s_vals = np.arange(len(intensity1))  # num - 1
 
 #fit a Gaussian curve
 from scipy.optimize import curve_fit
@@ -157,7 +154,7 @@ boundary_x_vals_b = []
 for t in np.linspace(time_window_frames[0], time_window_frames[1] - 1, number_of_frames):
     t = int(t)
 #    print('t = ' + str(t))
-    params, params_covariance = curve_fit(gauss_func, x_vals, -intensity1[t], p0=[0.5, 45., 10., -1.1])
+    params, params_covariance = curve_fit(gauss_func, s_vals, -intensity1[t], p0=[0.5, 45., 10., -1.1])
 #    print('params =' + str(params))
     boundary_t_vals.append(t * 7.68)
     boundary_x_vals_t.append((params[1] + np.sqrt(2*np.log(2))*params[2]) * 50)

@@ -106,22 +106,28 @@ class Full_map:
     
         global space
         space = np.linspace(0, num*50., len(intensity1[0]))  # multiply by 50 to convert into km
-    
-        return np.array(intensity1)
 
-#################
-#        OPP EDIT FROM HERE
+        return np.array(intensity1)
+    
+    
+    
+    ######### EDIT FROM HERE
+    
+
+    def intensity_slice(self):
+        print("\nSlicing intensity....")
+        intensity1 = distancetime(xfinal=slit_coords_x[0], xinitial=slit_coords_x[1],
+                                  yfinal=slit_coords_y[0], yinitial=slit_coords_y[1])
+        intensity_slice = -intensity1[181]
+        plt.figure()
+        plt.plot(intensity_slice)
 
     time_window = time_window_frames * 7.68  # in s
     number_of_frames = time_window_frames[1] - time_window_frames[0]
     
-    intensity1 = distancetime(xfinal=slit_coords_x[0], xinitial=slit_coords_x[1],
-                              yfinal=slit_coords_y[0], yinitial=slit_coords_y[1])
 
-print("\nSlicing intensity....")
-intensity_slice = -intensity1[181]
-plt.figure()
-plt.plot(intensity_slice)
+
+
 
 
 

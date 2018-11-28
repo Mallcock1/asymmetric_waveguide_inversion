@@ -131,29 +131,50 @@ class Full_map:
                 plt.plot(s_vals, func(s_vals), '-', color='red')
                 plt.plot(boundaries[0], boundaries[1], 'ro')
 
-    def animate(self, time_range, slit_coords=None):
+    def animate(self, time_range=[0, 237], slit_coords=None):
         """
         Inputs:
             slit_coords = [xinit, xfinal, yinit, yfinal]
             time_range = [tinit, tfinal]
         """
-
-        number_of_frames = time_range[1] - time_range[0]
-
         fig = plt.figure()
+        # ims is a list of lists, each row is a list of artists to draw in the
+        # current frame; here we are just animating one artist, the image, in
+        # each frame
+        ims = []
+        for i in range(time_range[0], time_range[1]):
+            im = plt.imshow(self.total_maps[i].data, aspect='auto',
+                            interpolation=None, animated=True, origin='lower')
+            ims.append([im])
+        
+        ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
+                                        repeat_delay=1000)
+        
+        # ani.save('dynamic_images.mp4')
+        
+        plt.show()
+        
+        
+        
 
-        def updatefig(i):
-            image_data = self.total_maps[i].data
-            im.set_array(image_data)
-            return im
-
-        im = plt.imshow(self.total_maps[time_range[0]].data, aspect='auto',
-                        interpolation=None, animated=True, origin='lower')
-
-        ani = animation.FuncAnimation(fig, updatefig, frames=number_of_frames,
-                                      interval=200, repeat_delay=1000)  # interval = delay between each fram in ms
-        if slit_coords is not None:
-            plt.plot(slit_coords[:2], slit_coords[2:], color='white')
+#        number_of_frames = time_range[1] - time_range[0]
+#
+#        fig = plt.figure()
+#
+#        im = plt.imshow(self.total_maps[time_range[0]].data, aspect='auto',
+#                        interpolation=None, animated=True, origin='lower')
+#
+#        def updatefig(i):
+#            image_data = self.total_maps[time_range[0] + i].data
+#            im.set_array(image_data)
+#            return im
+#
+#        ani = animation.FuncAnimation(fig, updatefig, frames=number_of_frames,
+#                                      interval=200, repeat_delay=1000)  # interval = delay between each fram in ms
+#        plt.show()
+#
+#        if slit_coords is not None:
+#            plt.plot(slit_coords[:2], slit_coords[2:], color='white')
         
 ######################################
 

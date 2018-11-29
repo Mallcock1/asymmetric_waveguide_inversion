@@ -10,7 +10,8 @@ file_path = 'D:/my_work/projects/Asymmetric_slab/Application_to_observation/Mort
 
 morton12 = td.Full_map(file_path)
 
-#morton12.animate(slit_coords=[100, 200, 100, 200])
-#morton12.total_maps[0].peek()
-d100 = morton12.total_maps[100].data
-d0 = d100 = morton12.total_maps[0].data
+morton12.distancetime(slit_coords=[100, 200, 100, 200], time_range=[0,238],
+                      plot=True, savefig=None)
+morton12.animate(slit_coords=[100, 200, 100, 200])
+#morton12.find_boundaries(slit_coords=[100, 200, 100, 200], time_range=[0,238],
+#                        p0=[0.5, 45., 10., -1.1], plot=True, savefig=None)

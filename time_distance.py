@@ -13,6 +13,8 @@ import matplotlib.animation as animation
 import numpy as np
 import scipy as sc
 import gauss_fitting as gf
+import astropy.units as u
+from astropy.coordinates import SkyCoord
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -22,6 +24,24 @@ class Full_map:
         self.file_path = os.path.abspath(file_path)
         self.total_maps = sunpy.map.Map(str(self.file_path) + '/*.fits',
                                         sequence=True)
+        self.cropped_map = []
+
+    def crop(self, bottom_left, top_right):
+        """
+        Crop the map.
+
+        Inputs:
+            bottom_left = [x, y]
+            top_right = [x, y]
+        """
+        top_right = SkyCoord(top_right[0]*u.arcsec, top_right[1]*u.arcsec,
+                             frame=self.total_maps[0].coordinate_frame)
+        bottom_left = SkyCoord(bottom_left[0]*u.arcsec, bottom_left[1]*u.arcsec,
+                               frame=self.total_maps[0].coordinate_frame)
+        self.cropped_maps = self.total_maps[0].submap(bottom_left, top_right)
+#        for i, m in enumerate(self.total_maps):
+#            m = m.submap(bottom_left, top_right)
+#            self.total_maps[i] = m
 
     def distancetime(self, slit_coords, time_range, plot=False, savefig=None):
         """
@@ -155,22 +175,6 @@ class Full_map:
         if time_range is None:
             time_range = [0, len([name for name in os.listdir(self.file_path) if os.path.isfile(os.path.join(self.file_path, name))])]
 
-#        fig = plt.figure()
-#
-#        ims = []
-#        for i in range(time_range[0], time_range[1]):
-#            print(i)
-#            im = plt.imshow(self.total_maps[i].data, aspect='auto',
-#                            interpolation=None, animated=True, origin='lower')
-#            ims.append([im])
-#
-#        ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
-#                                        repeat_delay=1000)
-#        if savefig is not None:
-#            ani.save('dynamic_images.mp4')
-#
-#        plt.show(ani)
-
         number_of_frames = time_range[1] - time_range[0]
 
         fig = plt.figure()
@@ -190,7 +194,7 @@ class Full_map:
             plt.plot(slit_coords[:2], slit_coords[2:], color='white')
             print(slit_coords)
         plt.show(ani)
-        
+
 ######################################
 
 #plt.figure()

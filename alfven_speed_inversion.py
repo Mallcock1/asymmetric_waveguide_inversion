@@ -5,6 +5,16 @@ Created on Fri Nov 02 13:07:39 2018
 @author: Matt
 
 Inversion functions for the Alfven speed in a magnetic slab.
+
+Inputs:
+    vA = Alfven speed,
+    c0 = sound speed,
+    R1 = rho1 / rho0,
+    R2 = rho2 / rho0,
+    w = angular frequency,
+    k = wavenumber,
+    x0 = half-width of the structure,
+    RA = observed amplitude ratio.
 """
 
 import numpy as np
@@ -95,5 +105,6 @@ def alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA, mode):
 def alfven_AR_inversion_2var(w, k, vA_guess, c0, R1_guess, R2, x0, RA, mode):
     def inversion_function(vA_R1):
         return np.real(amp_ratio(w, k, vA_R1[0], c0, vA_R1[1], R2, x0, mode) - RA)
-    vA_sol, R1_sol = fsolve(inversion_function, [vA_guess, R1_guess], xtol=1e-08)
+    vA_sol, R1_sol = fsolve(inversion_function, [vA_guess, R1_guess],
+                            xtol=1e-08)
     return [vA_sol, R1_sol]

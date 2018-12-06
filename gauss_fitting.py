@@ -11,6 +11,17 @@ from scipy.optimize import curve_fit
 
 
 def gauss_fit(data, p0=[0.5, 45., 10., -1.1], retrn="params"):
+    """
+    Fits a Gaussian curve to data
+
+    Inputs:
+        data = numpy array of very approximately Gaussian data,
+        p0 = initial [amplitude, mean, standard deviation, offset],
+        retrn = 'params'       ---> return list of least squares params,
+              = 'func'         ---> return fitted Gaussian function,
+              = 'pos_half_max' ---> return x positions where Gaussian reaches
+                                    half maximum.
+    """
     # s is the coordinate along the slit
     s_vals = np.arange(len(data))
 
@@ -21,7 +32,7 @@ def gauss_fit(data, p0=[0.5, 45., 10., -1.1], retrn="params"):
     params, params_covariance = curve_fit(gauss_func, s_vals, data, p0=p0)
 
     def gauss_func_new(x):
-        return gauss_func(x, params[0], params[1], params[2])
+        return gauss_func(x, params[0], params[1], params[2], params[3])
 
     if retrn == "params":
         return params

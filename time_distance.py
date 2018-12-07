@@ -3,7 +3,7 @@
 Matthew Allcock
 SP2RC, University of Sheffield
 
-Significantly adapted from an earlier code by Farhad Allian
+Significantly adapted from an earlier code by Farhad Allian.
 """
 
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ import os
 import matplotlib.animation as animation
 import numpy as np
 import scipy as sc
+import scipy.ndimage
 import gauss_fitting as gf
 from astropy.io import fits
 import warnings
@@ -59,7 +60,7 @@ class Full_map:
         """
         time_range_s = [time_range[0] * self.cadence,
                         time_range[1] * self.cadence]  # in s
-        
+
         print("\nCalculating the intensity values along slit....")
 
         intensity1 = []

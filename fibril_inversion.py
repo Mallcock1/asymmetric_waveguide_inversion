@@ -26,7 +26,7 @@ class Fibril:
             t_vals = numpy array of corresponding time values,
             pixel_size = size of pixels used in the observation (km),
             cadence = time between observation time frames (s),
-            trend_range = [start, end].
+            trend_range = slice(start, end).
         """
         self.yb = yb
         self.yt = yt
@@ -43,28 +43,28 @@ class Fibril:
     def yb_sub(self):
         if self.trend_range is None:
             return self.yb
-        elif type(self.trend_range) != list or len(self.trend_range) != 2:
-            raise ValueError("trend_range must be a list of length 2")
+        elif type(self.trend_range) is not slice:
+            raise ValueError("trend_range must be a slice")
         else:
-            return self.yb[self.trend_range[0]:self.trend_range[1]]
+            return self.yb[self.trend_range]
 
     @property
     def yt_sub(self):
         if self.trend_range is None:
             return self.yt
-        elif type(self.trend_range) != list or len(self.trend_range) != 2:
-            raise ValueError("trend_range must be a list of length 2")
+        elif type(self.trend_range) is not slice:
+            raise ValueError("trend_range must be a slice")
         else:
-            return self.yt[self.trend_range[0]:self.trend_range[1]]
+            return self.yt[self.trend_range]
 
     @property
     def t_vals_sub(self):
         if self.trend_range is None:
             return self.t_vals
-        elif type(self.trend_range) != list or len(self.trend_range) != 2:
-            raise ValueError("trend_range must be a list of length 2")
+        elif type(self.trend_range) is not slice:
+            raise ValueError("trend_range must be a slice")
         else:
-            return self.t_vals[self.trend_range[0]:self.trend_range[1]]
+            return self.t_vals[self.trend_range]
 
     @property
     def t_vals_cont_sub(self):
@@ -197,7 +197,7 @@ class Fibril:
             plt.errorbar(self.t_vals_sub, self.detrend(N, trend_type)[0],
                          yerr=self.pixel_size, color='black')
             plt.plot(self.t_vals_cont_sub, sin_fit[0], color='red')
-            plt.ylim([-200, 200])
+#            plt.ylim([-200, 200])
             plt.xlabel("Time (s)")
             plt.ylabel("Distance (km)")
             if savefig is not None:
@@ -208,7 +208,7 @@ class Fibril:
             plt.errorbar(self.t_vals_sub, self.detrend(N, trend_type)[1],
                          yerr=self.pixel_size, color='black')
             plt.plot(self.t_vals_cont_sub, sin_fit[2], color='red')
-            plt.ylim([-200, 200])
+#            plt.ylim([-200, 200])
             plt.xlabel("Time (s)")
             plt.ylabel("Distance (km)")
 

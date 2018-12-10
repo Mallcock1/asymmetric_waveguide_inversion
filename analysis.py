@@ -5,33 +5,43 @@ SP2RC, University of Sheffield
 """
 
 import time_distance as td
+import fibril_inversion as fi
+from boundary_data import *
 
-file_path = 'D:/my_work/projects/Asymmetric_slab/Application_to_observation/Morton_2012_data/rosa_data'
+show_time_distance_data = False
+do_fibril_inversion = False
 
-morton12 = td.Full_map(file_path)
-morton12.crop([0,0], [720, 780])
-#morton12.animate(slit_coords=[425, 429, 646, 546], interval=100, savefig="/plots/animation.mp4")
-morton12.distancetime(slit_coords=[591, 580, 265, 371], time_range=[0,71],
-                      plot=True, savefig="plots/test.png")
-#morton12.intensity_slice(slit_coords=[591, 580, 265, 371], time_frames=[60],
-#                         gauss_fit=True, savefig=None)
-#boundaries = morton12.find_boundaries(slit_coords=[591, 580, 265, 371],
-#                         time_range=[0,71], p0=[0.5, 45., 10., -1.1],
-#                         plot=True, savefig=None)
+show_time_distance_data = True
+#do_fibril_inversion = True
 
-#slit_coords_x = [591, 580]
-#slit_coords_y = [265, 371]
 
-#morton12.crop([0, 100], [0, 500])
-#
-#morton12.cropped_maps.peek()
 
-#morton12.total_maps.peek()
-#
-#morton12.animate()
+############################################################
 
-#morton12.total_maps[0].pixel_to_world(100*u.pix, 0*u.pix, origin=1000)
+if show_time_distance_data is True:
+    file_path = 'D:/my_work/projects/Asymmetric_slab/Application_to_observation/Morton_2012_data/rosa_data'
 
-#morton12.total_maps[0].top_right_coord
+    morton12 = td.Full_map(file_path, time_range=time_range)
+    morton12.crop([0, 0], [720, 780])
+#    morton12.animate(slit_coords=slit_coords, interval=100,
+#                     savefig="plots/" + fibril_number + "_ani.mp4")  # "plots/animation.mp4")
+#    morton12.distancetime(slit_coords=slit_coords, plot=True,
+#                          savefig="plots/" + fibril_number + "_dt.png")
+    #morton12.intensity_slice(slit_coords=[591, 580, 265, 371], time_frames=[60],
+    #                         gauss_fit=True, savefig=None)
+    boundaries = morton12.find_boundaries(slit_coords=slit_coords,
+                                          p0=[0.5, 45., 10., -1.1],
+                                          plot=True, savefig=None)
 
-#morton12.total_maps[0].peek()
+if do_fibril_inversion is True:
+    fibril = fi.Fibril(yb_pix, yt_pix, t_vals, trend_range=trend_range)
+    fibril.smooth(smooth_indices)
+    if unit == "pix":
+        fibril.pix_to_km()
+    elif unit != "km":
+        raise ValueError("unit must be 'pix' or 'km' in boundary_data.py")
+
+    sin_fit = fibril.sin_fitting(N=N, p0=p0)
+    fibril.trend_plot(N)
+
+    fibril.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2, mode)

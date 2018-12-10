@@ -40,7 +40,8 @@ def gauss_fit(data, p0=[0.5, 45., 10., -1.1], retrn="params"):
         # width at half maximum is np.sqrt(2*np.log(2)) * sigma
         return [[params[1] - np.sqrt(2*np.log(2))*params[2],
                 params[1] + np.sqrt(2*np.log(2))*params[2]],
-                [params[3] + 0.5*params[0], params[3] + 0.5*params[0]]]
+                [params[3] + 0.5*abs(params[0]),
+                 params[3] + 0.5*abs(params[0])]]
     elif retrn == "func":
         return gauss_func_new
     else:

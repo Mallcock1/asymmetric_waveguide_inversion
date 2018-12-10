@@ -35,6 +35,13 @@ if fibril_1 is True:
     yb_pix = np.array([24.75,27.25,29.5,31.5,31,31.75,32.25,33.75,34,34.5,34.75,30,
                        35.5,36,36.25,37,36.75,36.5,37,37,37.75,38.25,38,39.5,41,
                        42.5,43.5,44,43,41.25,39,38,37,36.75])
+    
+#    # width_pix and yb_pix from data.
+#    # Width of fibril in pixels
+#    width_pix = np.array([])
+#
+#    # y-distance from bottom of domain in pixels
+#    yb_pix = np.array([])
 
     yt_pix = yb_pix + width_pix
 
@@ -44,7 +51,7 @@ if fibril_1 is True:
 
     slit_coords = [425, 429, 616, 566]
 
-    time_range = slice(119, 220)  # in frames
+    time_range = slice(151, 225)  # in frames
 
     trend_range = slice(0, 22)
 

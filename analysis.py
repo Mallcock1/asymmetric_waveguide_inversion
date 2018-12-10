@@ -27,10 +27,11 @@ if show_time_distance_data is True:
 #                     savefig="plots/" + fibril_number + "_ani.mp4")  # "plots/animation.mp4")
 #    morton12.distancetime(slit_coords=slit_coords, plot=True,
 #                          savefig="plots/" + fibril_number + "_dt.png")
-    #morton12.intensity_slice(slit_coords=[591, 580, 265, 371], time_frames=[60],
-    #                         gauss_fit=True, savefig=None)
+#    morton12.intensity_slice(slit_coords=slit_coords, time_slice=list(range(119, 129)),
+#                             p0=[0.1, 10., 10., -1.0], gauss_fit=True, savefig=None)
     boundaries = morton12.find_boundaries(slit_coords=slit_coords,
-                                          p0=[0.5, 45., 10., -1.1],
+                                          moving_average=True, number_wtd_av=0,
+                                          p0=[0.1, 10., 10., -1.0],
                                           plot=True, savefig=None)
 
 if do_fibril_inversion is True:

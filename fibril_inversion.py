@@ -6,7 +6,7 @@ SP2RC, University of Sheffield
 
 Creates a class for a given fibril data.
 
-Defines functions to fit trends and fit sunisoids to detrended data.
+Defines functions to fit trends and fit sunnysoids to detrended data.
 """
 
 import numpy as np
@@ -28,12 +28,12 @@ class Fibril:
             cadence = time between observation time frames (s),
             trend_range = slice(start, end).
         """
-        self.yb = yb
-        self.yt = yt
-        self.t_vals = t_vals
         if len(t_vals) != len(yb):
             raise ValueError("Each time value must have an associated yb and "
                              "yt value")
+        self.yb = yb
+        self.yt = yt
+        self.t_vals = t_vals
         self.t_vals_cont = np.linspace(self.t_vals[0], self.t_vals[-1], 1000)
         self.pixel_size = pixel_size
         self.cadence = cadence

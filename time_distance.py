@@ -129,54 +129,29 @@ class Full_map:
 
         # Number of points we can interpolate along the slit,
         # using pytagoras' theorem
-        num = np.sqrt((slit_coords[1] - slit_coords[0])**2 + (slit_coords[3] - slit_coords[2])**2)
+        num = np.sqrt((slit_coords[1] - slit_coords[0])**2
+                      + (slit_coords[3] - slit_coords[2])**2)
         print("num = " + str(num))
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
         x = np.linspace(slit_coords[0], slit_coords[1], num)
         y = np.linspace(slit_coords[2], slit_coords[3], num)
 
+#        x = np.arange(slit_coords[0], slit_coords[1])
+#        y = np.arange(slit_coords[2], slit_coords[3])
+
         if moving_average is True:
-            # testing moving average slits
+            """
+            At each time step, the sliced intensity is averaged over
+            number_wtd_av number of pixels each side of the middle slit.
+
+            This will increase the signal-to-noise ratio.
+
+            number_wtd_av ~ 5 will give a good result.
+
+            Higher will blur out large structures that might be interesting.
+
+            High number_wtd_av is very computationally expensive.
+            """
             x0 = slit_coords[0]
             x1 = slit_coords[1]
             y0 = slit_coords[2]
@@ -184,27 +159,32 @@ class Full_map:
 
             m_prime = (x0 - x1) / (y1 - y0)
 
-            alpha = 1. / np.sqrt(1 + m_prime**2)
-        
+            alpha = 1.# / np.sqrt(1 + m_prime**2)
+
             for i, m in enumerate(self.total_maps):
                 map_list_for_average = []
                 # append middle slice
-                map_list_for_average.append(sc.ndimage.map_coordinates(np.transpose(m[0].data),
+                map_coords = scipy.ndimage.map_coordinates
+                map_list_for_average.append(map_coords(np.transpose(m[0].data),
                                             np.vstack((x, y))))
                 for i in range(1, number_wtd_av + 1):
                     # append number_wtd_av number of adjacent slices
-                    map_list_for_average.append(sc.ndimage.map_coordinates(np.transpose(m[0].data),
-                                                np.vstack((x - i*alpha, y - i*alpha*m_prime))))
-                    map_list_for_average.append(sc.ndimage.map_coordinates(np.transpose(m[0].data),
-                                                np.vstack((x + i*alpha, y - i*alpha*m_prime))))
+                    prev_slit = map_coords(np.transpose(m[0].data),
+                                           np.vstack((x - i*alpha,
+                                                      y - i*alpha*m_prime)))
+                    next_slit = map_coords(np.transpose(m[0].data),
+                                           np.vstack((x + i*alpha,
+                                                      y - i*alpha*m_prime)))
+                    map_list_for_average.append(prev_slit)
+                    map_list_for_average.append(next_slit)
                 # take average of these slices
                 m_average = list(np.mean(map_list_for_average, axis=0))
                 intensity1.append(m_average)
 
         else:
             for i, m in enumerate(self.total_maps):
-                intensity1.append(sc.ndimage.map_coordinates(np.transpose(m[0].data),
-                                                             np.vstack((x, y))))
+                intensity1.append(map_coords(np.transpose(m[0].data),
+                                             np.vstack((x, y))))
 
         intensity1 = np.array(intensity1)
 
@@ -253,7 +233,7 @@ class Full_map:
             # Skip points which raise errors in gauss fitting.
             try:
                 params = gf.gauss_fit(-intensity1[t], p0=p0, retrn="params")
-            except:
+            except RuntimeError:
                 pass
 
             # bottom and top x_vals
@@ -275,7 +255,8 @@ class Full_map:
                     p0 = params
 
         if plot is True:
-            num = np.sqrt((slit_coords[1] - slit_coords[0])**2 + (slit_coords[3] - slit_coords[2])**2)
+            num = np.sqrt((slit_coords[1] - slit_coords[0])**2
+                          + (slit_coords[3] - slit_coords[2])**2)
             plt.figure()
             plt.imshow(intensity1.T[:, self.time_range[0]:self.time_range[1]],
                        aspect='auto', interpolation=None, origin='lower',

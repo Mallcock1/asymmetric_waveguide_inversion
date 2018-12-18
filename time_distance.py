@@ -14,6 +14,8 @@ import scipy as sc
 import scipy.ndimage
 import gauss_fitting as gf
 from astropy.io import fits
+from astropy.convolution import convolve, Box1DKernel
+# Nb: this overrides pylab's convolve
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -75,7 +77,7 @@ class Full_map:
 
         im = plt.imshow(self.total_maps[self.time_range[0]][0].data,
                         aspect='auto', interpolation=None, animated=True,
-                        origin='lower')
+                        origin='lower', cmap="afmhot")
 
         def updatefig(i):
             image_data = self.total_maps[self.time_range[0] + i][0].data
@@ -97,20 +99,22 @@ class Full_map:
 
             m_prime = (x0 - x1) / (y1 - y0)
 
-            alpha = 1. / np.sqrt(1 + m_prime**2)
-
-            plt.plot([x0 + alpha, x1 + alpha],
-                     [y0 + alpha*m_prime, y1 + alpha*m_prime], color='yellow')
-            plt.plot([x0 - alpha, x1 - alpha],
-                     [y0 - alpha*m_prime, y1 - alpha*m_prime], color='green')
+            alpha = 5.  # / np.sqrt(1 + m_prime**2)
+            for i in range(1, 3):
+                plt.plot([x0 + i*alpha, x1 + i*alpha],
+                         [y0 + i*alpha*m_prime, y1 + i*alpha*m_prime],
+                         color='yellow')
+                plt.plot([x0 - i*alpha, x1 - i*alpha],
+                         [y0 - i*alpha*m_prime, y1 - i*alpha*m_prime],
+                         color='green')
 
         plt.show()
 
         if savefig is not None:
             ani.save(savefig)
 
-    def distancetime(self, slit_coords, moving_average=False, number_wtd_av=5,
-                     plot=False, savefig=None):
+    def distancetime(self, slit_coords, moving_average=False, num_wtd_av=5,
+                     wtd_av_distance=1., plot=False, savefig=None):
         """
         Distances in pixels
 
@@ -138,19 +142,19 @@ class Full_map:
 
 #        x = np.arange(slit_coords[0], slit_coords[1])
 #        y = np.arange(slit_coords[2], slit_coords[3])
-
+        map_coords = scipy.ndimage.map_coordinates
         if moving_average is True:
             """
             At each time step, the sliced intensity is averaged over
-            number_wtd_av number of pixels each side of the middle slit.
+            num_wtd_av number of pixels each side of the middle slit.
 
             This will increase the signal-to-noise ratio.
 
-            number_wtd_av ~ 5 will give a good result.
+            num_wtd_av ~ 5 will give a good result.
 
             Higher will blur out large structures that might be interesting.
 
-            High number_wtd_av is very computationally expensive.
+            High num_wtd_av is very computationally expensive.
             """
             x0 = slit_coords[0]
             x1 = slit_coords[1]
@@ -159,16 +163,15 @@ class Full_map:
 
             m_prime = (x0 - x1) / (y1 - y0)
 
-            alpha = 1.# / np.sqrt(1 + m_prime**2)
+            alpha = wtd_av_distance  # / np.sqrt(1 + m_prime**2)
 
             for i, m in enumerate(self.total_maps):
                 map_list_for_average = []
                 # append middle slice
-                map_coords = scipy.ndimage.map_coordinates
                 map_list_for_average.append(map_coords(np.transpose(m[0].data),
                                             np.vstack((x, y))))
-                for i in range(1, number_wtd_av + 1):
-                    # append number_wtd_av number of adjacent slices
+                for i in range(1, num_wtd_av + 1):
+                    # append num_wtd_av number of adjacent slices
                     prev_slit = map_coords(np.transpose(m[0].data),
                                            np.vstack((x - i*alpha,
                                                       y - i*alpha*m_prime)))
@@ -193,7 +196,7 @@ class Full_map:
             plt.imshow(intensity1.T[:, self.time_range[0]:self.time_range[1]],
                        aspect='auto', interpolation=None, origin='lower',
                        extent=[time_range_s[0], time_range_s[1],
-                               0, num*self.pixel_size])
+                               0, num*self.pixel_size], cmap="afmhot")
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
             plt.ylim([0, num*self.pixel_size])
@@ -203,7 +206,8 @@ class Full_map:
         return intensity1
 
     def find_boundaries(self, slit_coords, moving_average=False,
-                        number_wtd_av=5, p0=[0.5, 45., 10., -1.1], plot=False,
+                        wtd_av_distance=1., num_wtd_av=5,
+                        p0=[0.5, 45., 10., -1.1], plot=False,
                         savefig=None):
         """
         Find boundaries of the structure using gauss fitting. The edges are the
@@ -222,7 +226,8 @@ class Full_map:
 
         intensity1 = self.distancetime(slit_coords=slit_coords,
                                        moving_average=moving_average,
-                                       number_wtd_av=number_wtd_av)
+                                       wtd_av_distance=wtd_av_distance,
+                                       num_wtd_av=num_wtd_av)
 
         boundary_t_vals = []
         boundary_x_vals_t = []
@@ -261,7 +266,7 @@ class Full_map:
             plt.imshow(intensity1.T[:, self.time_range[0]:self.time_range[1]],
                        aspect='auto', interpolation=None, origin='lower',
                        extent=[time_range_s[0], time_range_s[1],
-                               0, num*self.pixel_size])
+                               0, num*self.pixel_size], cmap="afmhot")
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
             plt.plot(boundary_t_vals, boundary_x_vals_b, 'ro')
@@ -304,3 +309,111 @@ class Full_map:
 
                 if savefig is not None:
                     plt.savefig(savefig)
+
+    def find_multi_slit_boundaries(self, slit_coords, num_slits=1,
+                                   slit_distance=1., moving_average=False,
+                                   wtd_av_distance=1., num_wtd_av=5,
+                                   p0=[0.5, 45., 10., -1.1],
+                                   plot=False, savefig=None):
+        """
+#        Find boundaries of the structure using gauss fitting. The edges are the
+#        half-maximum points on each side of the structure.
+
+        Inputs:
+            slit_coords = [xinit, xfinal, yinit, yfinal],
+            p0 = initial [amplitude, mean, standard deviation, offset],
+            savefig = None (not saved) or saved name string.
+        """
+
+        if num_slits % 2 != 1:
+            raise ValueError("num_slits must be an odd number.")
+
+        multi_boundaries = []
+        middle_slit = self.find_boundaries(slit_coords=slit_coords,
+                                           moving_average=moving_average,
+                                           wtd_av_distance=wtd_av_distance,
+                                           num_wtd_av=num_wtd_av, p0=p0)
+        multi_boundaries.append(middle_slit)
+
+        x0 = slit_coords[0]
+        x1 = slit_coords[1]
+        y0 = slit_coords[2]
+        y1 = slit_coords[3]
+        m_prime = (x0 - x1) / (y1 - y0)
+        alpha = slit_distance  # / np.sqrt(1 + m_prime**2)
+        for i in range(1, int((num_slits + 1) / 2)):
+            x0_r = x0 + i*alpha
+            x1_r = x1 + i*alpha
+            y0_r = y0 + i*alpha*m_prime
+            y1_r = y1 + i*alpha*m_prime
+            slit_coords_r = [x0_r, x1_r, y0_r, y1_r]
+
+            x0_l = x0 - i*alpha
+            x1_l = x1 - i*alpha
+            y0_l = y0 - i*alpha*m_prime
+            y1_l = y1 - i*alpha*m_prime
+            slit_coords_l = [x0_l, x1_l, y0_l, y1_l]
+
+            slit_r = self.find_boundaries(slit_coords=slit_coords_r,
+                                          moving_average=moving_average,
+                                          wtd_av_distance=wtd_av_distance,
+                                          num_wtd_av=num_wtd_av, p0=p0)
+
+            slit_l = self.find_boundaries(slit_coords=slit_coords_l,
+                                          moving_average=moving_average,
+                                          wtd_av_distance=wtd_av_distance,
+                                          num_wtd_av=num_wtd_av, p0=p0)
+            multi_boundaries.append(slit_r)
+            multi_boundaries.insert(0, slit_l)
+
+        if plot is True:
+            num = np.sqrt((slit_coords[1] - slit_coords[0])**2
+                          + (slit_coords[3] - slit_coords[2])**2)
+            plt.figure()
+            plt.xlabel('Time (s)')
+            plt.ylabel('Distance (km)')
+            plt.ylim([0, num*self.pixel_size])
+            for i, boundary in enumerate(multi_boundaries):
+                boundary_shift_b = np.array(boundary[0]) + i*slit_distance*self.pixel_size
+                boundary_shift_t = np.array(boundary[1]) + i*slit_distance*self.pixel_size
+                plt.plot(boundary[2], boundary_shift_b, 'o')
+                plt.plot(boundary[2], boundary_shift_t, 'o')
+                plt.plot(boundary[2], convolve(boundary_shift_b, Box1DKernel(3)))
+                plt.plot(boundary[2], convolve(boundary_shift_t, Box1DKernel(3)))
+            if savefig is not None:
+                plt.savefig(savefig)
+
+        return multi_boundaries
+
+    def find_multi_slit_widths(self, slit_coords, num_slits=1, slit_distance=1.,
+                               moving_average=False, wtd_av_distance=1.,
+                               num_wtd_av=5, p0=[0.5, 45., 10., -1.1],
+                               plot=False, savefig=None):
+        multi_boundaries = self.find_multi_slit_boundaries(slit_coords=slit_coords,
+                                                           num_slits=num_slits,
+                                                           slit_distance=slit_distance,
+                                                           moving_average=moving_average,
+                                                           wtd_av_distance=wtd_av_distance,
+                                                           num_wtd_av=num_wtd_av,
+                                                           p0=p0)
+        widths = []
+        for i, mb in enumerate(multi_boundaries):
+            widths.append([np.array(mb[1]) - np.array(mb[0]),
+                           np.array(mb[2])])
+
+        if plot is True:
+#            num = np.sqrt((slit_coords[1] - slit_coords[0])**2
+#                          + (slit_coords[3] - slit_coords[2])**2)
+            plt.figure()
+
+            plt.xlabel('Time (s)')
+            plt.ylabel('Distance (km)')
+#            plt.ylim([0, num*self.pixel_size])
+            for i, width in enumerate(widths):
+                width_shift = width[0] + i*slit_distance*self.pixel_size
+                plt.plot(width[1], width_shift, 'o')
+                plt.plot(width[1], convolve(width_shift, Box1DKernel(3)))
+            if savefig is not None:
+                plt.savefig(savefig)
+        return widths
+                

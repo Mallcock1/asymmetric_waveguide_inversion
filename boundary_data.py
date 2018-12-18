@@ -49,9 +49,9 @@ if fibril_1 is True:
 
     smooth_indices = [11]
 
-    slit_coords = [425, 429, 616, 566]
+    slit_coords = [420, 424, 615.6, 565.6]  # This is what the boundary data above is from: [425, 429, 616, 566]
 
-    time_range = slice(151, 225)  # in frames
+    time_range = slice(170, 225)  # slice(151, 225)  # in frames
 
     trend_range = slice(0, 22)
 
@@ -64,11 +64,11 @@ if fibril_1 is True:
     N = 2
     p0 = [100., 0.01, 0.]
 
-    vA_guess = 100.  # estimate from morton 12
+    vA_guess = 30.  # 100.  # estimate from morton 12
     c0 = 10.  # estimate given in Morton 12
     R1 = 0.2  # R1 := rho_1 / rho_0
     R2 = 0.1  # R2 := rho_2 / rho_0
-    c_phase = 71.
+    c_phase = 47  # Morton found this: 71.
     mode = "saus"
 
 

@@ -4,6 +4,8 @@ Matthew Allcock
 SP2RC, University of Sheffield
 """
 
+import numpy as np
+from scipy.signal import correlate
 import time_distance as td
 import fibril_inversion as fi
 from boundary_data import *
@@ -28,10 +30,39 @@ if show_time_distance_data is True:
 #                          savefig="plots/" + fibril_number + "_dt.png")
 #    morton12.intensity_slice(slit_coords=slit_coords, time_slice=list(range(119, 129)),
 #                             p0=[0.1, 10., 10., -1.0], gauss_fit=True, savefig=None)
-    boundaries = morton12.find_boundaries(slit_coords=slit_coords,
-                                          moving_average=True, number_wtd_av=0,
-                                          p0=[0.1, 10., 10., -1.0],
-                                          plot=True, savefig=None)
+#    boundaries = morton12.find_boundaries(slit_coords=slit_coords,
+#                                          moving_average=False, num_wtd_av=0,
+#                                          p0=[0.5, 45., 10., -1.1],
+#                                          plot=True, savefig=None)
+#    multi_boundaries = morton12.find_multi_slit_boundaries(slit_coords=slit_coords,
+#                                                           num_slits=5,
+#                                                           slit_distance=10., moving_average=False,
+#                                                           p0=[0.5, 45., 10., -1.1], plot=True,
+#                                                           savefig=None)
+#    widths = morton12.find_multi_slit_widths(slit_coords=slit_coords,
+#                                             num_slits=5, slit_distance=5.,
+#                                             p0=[0.5, 45., 10., -1.1],
+#                                             plot=True)
+    
+    
+#    # Testing cross-correlation time lag between slit width signals
+#    lag = np.argmax(correlate(widths[0][0], widths[-1][0]))
+#    
+#    from scipy.interpolate import CubicSpline
+#    
+#    cs0 = CubicSpline(widths[0][1], widths[0][0])
+#    cs1 = CubicSpline(widths[-1][1], widths[-1][0])
+#    
+#    t_vals = np.linspace(1305, 1720, 100)
+#    cor = correlate(widths[0][0], widths[-1][0]) #correlate(cs0(t_vals), cs1(t_vals))
+#    lag = np.argmax(cor)
+#    plt.figure()
+#    plt.plot(t_vals, cs0(t_vals))
+#    plt.plot(t_vals, cs1(t_vals))
+#    plt.figure()
+#    plt.plot(cor)
+#    phase_speed = 5*50 / lag
+#    print("phase speed is ", phase_speed)
 
 if do_fibril_inversion is True:
     fibril = fi.Fibril(yb_pix, yt_pix, t_vals, trend_range=trend_range)
@@ -44,4 +75,4 @@ if do_fibril_inversion is True:
     sin_fit = fibril.sin_fitting(N=N, p0=p0, plot=True)
     fibril.trend_plot(N)
 
-#    fibril.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2, mode)
+    fibril.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2, mode)

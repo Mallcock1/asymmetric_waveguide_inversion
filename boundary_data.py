@@ -21,6 +21,23 @@ fibril_1 = True
 ############################################################
 # Fibril 1 (pixel counting from Fig 4 in Morton et al 2012)
 
+# function to stretch a given slit by a factor
+def stretch_slit(slit_coords, factor):
+    x0 = slit_coords[0]
+    x1 = slit_coords[1]
+    y0 = slit_coords[2]
+    y1 = slit_coords[3]
+
+    xmid = (x1 + x0) / 2
+    ymid = (y1 + y0) / 2
+
+    x0new = (x0 - xmid)*factor + xmid
+    x1new = (x1 - xmid)*factor + xmid
+    y0new = (y0 - ymid)*factor + ymid
+    y1new = (y1 - ymid)*factor + ymid
+    return [x0new, x1new, y0new, y1new]
+
+
 if fibril_1 is True:
     print("You have chosen fibril_1")
     fibril_number = "fibril1"
@@ -50,8 +67,10 @@ if fibril_1 is True:
     smooth_indices = [11]
 
     slit_coords = [420, 424, 615.6, 565.6]  # This is what the boundary data above is from: [425, 429, 616, 566]
-
-    time_range = slice(170, 225)  # slice(151, 225)  # in frames
+    
+#    slit_coords = stretch_slit(slit_coords, 1.5)
+    
+    time_range = slice(130, 225)  # slice(151, 225)  # in frames
 
     trend_range = slice(0, 22)
 

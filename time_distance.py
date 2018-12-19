@@ -269,8 +269,8 @@ class Full_map:
                                0, num*self.pixel_size], cmap="afmhot")
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
-            plt.plot(boundary_t_vals, boundary_x_vals_b, 'ro')
-            plt.plot(boundary_t_vals, boundary_x_vals_t, 'ro')
+            plt.plot(boundary_t_vals, boundary_x_vals_b, 'bo')
+            plt.plot(boundary_t_vals, boundary_x_vals_t, 'bo')
             plt.ylim([0, num*self.pixel_size])
             if savefig is not None:
                 plt.savefig(savefig)
@@ -416,4 +416,3 @@ class Full_map:
             if savefig is not None:
                 plt.savefig(savefig)
         return widths
-                

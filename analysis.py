@@ -32,8 +32,8 @@ if show_time_distance_data is True:
 #                             p0=[0.1, 10., 10., -1.0], gauss_fit=True, savefig=None)
     boundaries = morton12.find_boundaries(slit_coords=slit_coords,
                                           moving_average=True, num_wtd_av=3,
-                                          p0=p0_gauss, stabilise=True,
-                                          stability_range = 300, plot=True, savefig=None)
+                                          p0=p0_gauss, stabilise=False,
+                                          plot=True, savefig=None)
 #    multi_boundaries = morton12.find_multi_slit_boundaries(slit_coords=slit_coords,
 #                                                           num_slits=5,
 #                                                           slit_distance=10., moving_average=False,

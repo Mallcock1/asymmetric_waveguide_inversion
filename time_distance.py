@@ -129,7 +129,7 @@ class Full_map:
 
         print("\nCalculating the intensity values along slit....")
 
-        intensity1 = []
+        intensity = []
 
         # Number of points we can interpolate along the slit,
         # using pytagoras' theorem
@@ -182,18 +182,18 @@ class Full_map:
                     map_list_for_average.append(next_slit)
                 # take average of these slices
                 m_average = list(np.mean(map_list_for_average, axis=0))
-                intensity1.append(m_average)
+                intensity.append(m_average)
 
         else:
             for i, m in enumerate(self.total_maps):
-                intensity1.append(map_coords(np.transpose(m[0].data),
+                intensity.append(map_coords(np.transpose(m[0].data),
                                              np.vstack((x, y))))
 
-        intensity1 = np.array(intensity1)
+        intensity = np.array(intensity)
 
         if plot is True:
             plt.figure()
-            plt.imshow(intensity1.T[:, self.time_range[0]:self.time_range[1]],
+            plt.imshow(intensity.T[:, self.time_range[0]:self.time_range[1]],
                        aspect='auto', interpolation=None, origin='lower',
                        extent=[time_range_s[0], time_range_s[1],
                                0, num*self.pixel_size], cmap="afmhot")
@@ -203,11 +203,12 @@ class Full_map:
             if savefig is not None:
                 plt.savefig(savefig)
 
-        return intensity1
+        return intensity
 
     def find_boundaries(self, slit_coords, moving_average=False,
                         wtd_av_distance=1., num_wtd_av=5,
-                        p0=[0.5, 45., 10., -1.1], plot=False,
+                        p0=[0.5, 45., 10., -1.1], stabilise=False,
+                        stability_range=10, plot=False,
                         savefig=None):
         """
         Find boundaries of the structure using gauss fitting. The edges are the
@@ -224,46 +225,110 @@ class Full_map:
         time_vals = np.linspace(self.time_range[0], self.time_range[1],
                                 number_of_frames + 1)
 
-        intensity1 = self.distancetime(slit_coords=slit_coords,
-                                       moving_average=moving_average,
-                                       wtd_av_distance=wtd_av_distance,
-                                       num_wtd_av=num_wtd_av)
+        intensity = self.distancetime(slit_coords=slit_coords,
+                                      moving_average=moving_average,
+                                      wtd_av_distance=wtd_av_distance,
+                                      num_wtd_av=num_wtd_av)
 
         boundary_t_vals = []
         boundary_x_vals_t = []
         boundary_x_vals_b = []
 
+        FWHM_factor = np.sqrt(2*np.log(2))
+        success = False
         for i, t in enumerate(time_vals):
             t = int(t)
-            # Skip points which raise errors in gauss fitting.
-            try:
-                params = gf.gauss_fit(-intensity1[t], p0=p0, retrn="params")
-            except RuntimeError:
-                pass
-
-            # bottom and top x_vals
-            bot = (params[1] - np.sqrt(2*np.log(2))*params[2])*self.pixel_size
-            top = (params[1] + np.sqrt(2*np.log(2))*params[2])*self.pixel_size
-
-            # Just append the first one
-            if i == 0:
-                boundary_t_vals.append(t * self.cadence)
-                boundary_x_vals_b.append(bot)
-                boundary_x_vals_t.append(top)
-            else:
-                # if big jump in width, just skip and use prev params for next
-                if top - bot < 2*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
+            if stabilise is False:
+                data_to_fit = -intensity[t]
+                if p0[1] is None:
+                    # set initial guess at gaussian mean to be argmax of 
+                    # intensity
+                    p0[1] = np.argmax(data_to_fit)
+                # Skip points which raise errors in gauss fitting.
+                try:
+                    params = gf.gauss_fit(data_to_fit, p0=p0, retrn="params")
+                except RuntimeError:
+                    pass
+    
+                # bottom and top x_vals
+                bot = (params[1] - np.sqrt(2*np.log(2))*params[2])*self.pixel_size
+                top = (params[1] + np.sqrt(2*np.log(2))*params[2])*self.pixel_size
+    
+                # Just append the first one
+                if i == 0:
                     boundary_t_vals.append(t * self.cadence)
                     boundary_x_vals_b.append(bot)
                     boundary_x_vals_t.append(top)
+                else:
+                    # if big jump in width, just skip and use prev params for next
+                    if top - bot < 2*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
+                        boundary_t_vals.append(t * self.cadence)
+                        boundary_x_vals_b.append(bot)
+                        boundary_x_vals_t.append(top)
+    
+                        p0 = params
+            else:
+                # TEST
+                if success is False:
+                    data_to_fit = -intensity[t]
+                    # Skip points which raise errors in gauss fitting.
+                    try:
+                        if p0[1] is None:
+                            # set initial guess at gaussian mean to be argmax of 
+                            # intensity
+                            p0[1] = np.argmax(data_to_fit)
+                        params = gf.gauss_fit(data_to_fit, p0=p0,
+                                              retrn="params")
+                        success = True
+    
+                        # bottom and top x_vals
+                        bot = (params[1] - FWHM_factor*params[2])*self.pixel_size
+                        top = (params[1] + FWHM_factor*params[2])*self.pixel_size
+    
+                        boundary_t_vals.append(t * self.cadence)
+                        boundary_x_vals_b.append(bot)
+                        boundary_x_vals_t.append(top)
+                        
+                        p0 = params
+                    except RuntimeError:
+                        pass
+                else:
+                    # crop distance range to just around previous boundaries
+                    bot_boundary_prev = int(np.round(p0[1] - FWHM_factor*p0[2]))
+                    top_boundary_prev = int(np.round(p0[1] + FWHM_factor*p0[2]))
+                    
+                    bot_of_data = max(bot_boundary_prev - stability_range, 0)
+                    top_of_data = min(top_boundary_prev + stability_range,
+                                      len(-intensity[t]))
 
-                    p0 = params
+                    data_to_fit = -intensity[t][bot_of_data:top_of_data]
+
+                    p0[1] = p0[1] - bot_of_data
+                    try:
+                        params = gf.gauss_fit(data_to_fit, p0=p0,
+                                              retrn="params")
+
+                        p0_new = params
+                        p0_new[1] = p0_new[1] + bot_of_data 
+
+                        bot = (p0_new[1] - FWHM_factor*p0_new[2])*self.pixel_size
+                        top = (p0_new[1] + FWHM_factor*p0_new[2])*self.pixel_size
+
+                        # if big jump in width, just skip and use prev params for next
+                        if top - bot < 2*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
+                            boundary_t_vals.append(t * self.cadence)
+                            boundary_x_vals_b.append(bot)
+                            boundary_x_vals_t.append(top)
+
+                            p0 = p0_new
+                    except (RuntimeError, TypeError):
+                        pass
 
         if plot is True:
             num = np.sqrt((slit_coords[1] - slit_coords[0])**2
                           + (slit_coords[3] - slit_coords[2])**2)
             plt.figure()
-            plt.imshow(intensity1.T[:, self.time_range[0]:self.time_range[1]],
+            plt.imshow(intensity.T[:, self.time_range[0]:self.time_range[1]],
                        aspect='auto', interpolation=None, origin='lower',
                        extent=[time_range_s[0], time_range_s[1],
                                0, num*self.pixel_size], cmap="afmhot")
@@ -291,8 +356,8 @@ class Full_map:
 
         for ts in time_slice:
             print("\nSlicing intensity at frame number " + str(ts))
-            intensity1 = self.distancetime(slit_coords=slit_coords)
-            intensity_slice = -intensity1[ts]
+            intensity = self.distancetime(slit_coords=slit_coords)
+            intensity_slice = -intensity[ts]
             s_vals = np.arange(len(intensity_slice))
 
             plt.figure()

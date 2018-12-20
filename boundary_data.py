@@ -13,16 +13,17 @@ fibril_2 = False
 fibril_3 = False
 fibril_4 = False
 
-fibril_1 = True
-#fibril_2 = True
+#fibril_1 = True
+fibril_2 = True
 #fibril_3 = True
 #fibril_4 = True
 
 ############################################################
 # Fibril 1 (pixel counting from Fig 4 in Morton et al 2012)
 
-# function to stretch a given slit by a factor
+
 def stretch_slit(slit_coords, factor):
+    # function to stretch a given slit by a factor
     x0 = slit_coords[0]
     x1 = slit_coords[1]
     y0 = slit_coords[2]
@@ -78,6 +79,8 @@ if fibril_1 is True:
     t_start = 1000 + 19*cad
 
     t_vals = np.arange(len(yb_pix))*cad*2 + t_start
+
+    p0_gauss =  [0.1, 10., 10., -1.0]
 
     # Degree of the trend polynomial
     N = 2
@@ -258,6 +261,8 @@ if fibril_2 is True:
 
     t_vals = np.arange(len(yb_pix))*cad + t_start
 
+    p0_gauss = [0.1, None, 10., -1.0]
+
     # Degree of the trend polynomial
     N = 2
     p0 = [100., 0.01, 0.]
@@ -379,8 +384,10 @@ if fibril_3 is True:
     cad = 7.68  # temporal resolution (cadence) of the ROSA instrument in s
     t_start = 0
 
-    t_vals = np.arange(len(yb_pix))*cad + t_start
-
+    t_vals = np.arange(len(yb))*cad + t_start
+    
+    p0_gauss [0.1, 10., 10., -1.0]
+    
     # Degree of the trend polynomial
     N = 2
     p0 = [100., 0.01, 0.]

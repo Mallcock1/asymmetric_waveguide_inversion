@@ -174,12 +174,17 @@ class Fibril:
                        = 'diff' uses difference trend,
             savefig = None (not saved) or list of saved name strings.
         """
+        if trend_type == "diff":
+            t_vals_sub = self.t_vals_sub[1:]
+        else:
+            t_vals_sub = self.t_vals_sub
+        
         def sin_func(x, a, b, c):  # a=amplitude, b=angular frequency
             return a * np.sin(b * x + c)
-        yb_params, yb_params_covar = curve_fit(sin_func, self.t_vals_sub,
+        yb_params, yb_params_covar = curve_fit(sin_func, t_vals_sub,
                                                self.detrend(N, trend_type)[0],
                                                p0=p0)
-        yt_params, yt_params_covar = curve_fit(sin_func, self.t_vals_sub,
+        yt_params, yt_params_covar = curve_fit(sin_func, t_vals_sub,
                                                self.detrend(N, trend_type)[1],
                                                p0=p0)
         print("\nTOP: Amp = " "%.4g" % yt_params[0] + " km, Freq = "
@@ -192,12 +197,15 @@ class Fibril:
                    sin_func(self.t_vals_cont_sub, yt_params[0], yt_params[1],
                             yt_params[2]), yt_params]
         if plot is True:
+            y_lim = max(max(self.detrend(N, trend_type)[0]),
+                        max(self.detrend(N, trend_type)[1])) + self.pixel_size
+            
             # Bottom boundary oscillation
             plt.figure()
-            plt.errorbar(self.t_vals_sub, self.detrend(N, trend_type)[0],
+            plt.errorbar(t_vals_sub, self.detrend(N, trend_type)[0],
                          yerr=self.pixel_size, color='black')
             plt.plot(self.t_vals_cont_sub, sin_fit[0], color='red')
-#            plt.ylim([-200, 200])
+            plt.ylim([-y_lim, y_lim])
             plt.xlabel("Time (s)")
             plt.ylabel("Distance (km)")
             if savefig is not None:
@@ -205,10 +213,10 @@ class Fibril:
 
             # Top boundary oscillation
             plt.figure()
-            plt.errorbar(self.t_vals_sub, self.detrend(N, trend_type)[1],
+            plt.errorbar(t_vals_sub, self.detrend(N, trend_type)[1],
                          yerr=self.pixel_size, color='black')
             plt.plot(self.t_vals_cont_sub, sin_fit[2], color='red')
-#            plt.ylim([-200, 200])
+            plt.ylim([-y_lim, y_lim])
             plt.xlabel("Time (s)")
             plt.ylabel("Distance (km)")
 

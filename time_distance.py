@@ -208,8 +208,7 @@ class Full_map:
     def find_boundaries(self, slit_coords, moving_average=False,
                         wtd_av_distance=1., num_wtd_av=5,
                         p0=[0.5, 45., 10., -1.1], stabilise=False,
-                        stability_range=10, plot=False,
-                        savefig=None):
+                        plot=False, savefig=None):
         """
         Find boundaries of the structure using gauss fitting. The edges are the
         half-maximum points on each side of the structure.
@@ -268,61 +267,133 @@ class Full_map:
     
                         p0 = params
             else:
-                # TEST
-                if success is False:
-                    data_to_fit = -intensity[t]
-                    # Skip points which raise errors in gauss fitting.
-                    try:
-                        if p0[1] is None:
-                            # set initial guess at gaussian mean to be argmax of 
-                            # intensity
-                            p0[1] = np.argmax(data_to_fit)
-                        params = gf.gauss_fit(data_to_fit, p0=p0,
-                                              retrn="params")
-                        success = True
+                ###############################
+                # Crop gaussian range if jump
+                ###############################
+                data_to_fit = -intensity[t]
+                if p0[1] is None:
+                    # set initial guess at gaussian mean to be argmax of 
+                    # intensity
+                    p0[1] = np.argmax(data_to_fit)
+                # Skip points which raise errors in gauss fitting.
+                try:
+                    params = gf.gauss_fit(data_to_fit, p0=p0, retrn="params")
+                except RuntimeError:
+                    pass
     
-                        # bottom and top x_vals
-                        bot = (params[1] - FWHM_factor*params[2])*self.pixel_size
-                        top = (params[1] + FWHM_factor*params[2])*self.pixel_size
+                # bottom and top x_vals
+                bot = (params[1] - np.sqrt(2*np.log(2))*params[2])*self.pixel_size
+                top = (params[1] + np.sqrt(2*np.log(2))*params[2])*self.pixel_size
     
+                # Just append the first one
+                if i == 0:
+                    boundary_t_vals.append(t * self.cadence)
+                    boundary_x_vals_b.append(bot)
+                    boundary_x_vals_t.append(top)
+                else:
+                    # if big jump in width, just skip and use prev params for next
+                    if top - bot < 2*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
                         boundary_t_vals.append(t * self.cadence)
                         boundary_x_vals_b.append(bot)
                         boundary_x_vals_t.append(top)
-                        
+    
                         p0 = params
-                    except RuntimeError:
-                        pass
-                else:
-                    # crop distance range to just around previous boundaries
-                    bot_boundary_prev = int(np.round(p0[1] - FWHM_factor*p0[2]))
-                    top_boundary_prev = int(np.round(p0[1] + FWHM_factor*p0[2]))
-                    
-                    bot_of_data = max(bot_boundary_prev - stability_range, 0)
-                    top_of_data = min(top_boundary_prev + stability_range,
-                                      len(-intensity[t]))
-
-                    data_to_fit = -intensity[t][bot_of_data:top_of_data]
-
-                    p0[1] = p0[1] - bot_of_data
-                    try:
-                        params = gf.gauss_fit(data_to_fit, p0=p0,
-                                              retrn="params")
-
-                        p0_new = params
-                        p0_new[1] = p0_new[1] + bot_of_data 
-
-                        bot = (p0_new[1] - FWHM_factor*p0_new[2])*self.pixel_size
-                        top = (p0_new[1] + FWHM_factor*p0_new[2])*self.pixel_size
-
-                        # if big jump in width, just skip and use prev params for next
-                        if top - bot < 2*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
-                            boundary_t_vals.append(t * self.cadence)
-                            boundary_x_vals_b.append(bot)
-                            boundary_x_vals_t.append(top)
-
-                            p0 = p0_new
-                    except (RuntimeError, TypeError):
-                        pass
+                    else:
+                        # crop distance range to just around previous boundaries
+                        bot_boundary_prev = int(np.round(p0[1] - FWHM_factor*p0[2]))
+                        top_boundary_prev = int(np.round(p0[1] + FWHM_factor*p0[2]))
+                        
+                        bot_of_data = max(bot_boundary_prev - stabilise, 0)
+                        top_of_data = min(top_boundary_prev + stabilise,
+                                          len(-intensity[t]))
+    
+                        data_to_fit = -intensity[t][bot_of_data:top_of_data]
+    
+                        p0[1] = p0[1] - bot_of_data
+                        try:
+                            params = gf.gauss_fit(data_to_fit, p0=p0,
+                                                  retrn="params")
+    
+                            p0_new = params
+                            p0_new[1] = p0_new[1] + bot_of_data
+    
+                            bot = (p0_new[1] - FWHM_factor*p0_new[2])*self.pixel_size
+                            top = (p0_new[1] + FWHM_factor*p0_new[2])*self.pixel_size
+    
+                            # if big jump in width, just skip and use prev params for next
+                            if top - bot < 2.5*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
+                                boundary_t_vals.append(t * self.cadence)
+                                boundary_x_vals_b.append(bot)
+                                boundary_x_vals_t.append(top)
+    
+                                p0 = p0_new
+                        except RuntimeError:
+                            pass
+                
+                
+                
+                
+                
+                
+                
+                
+#                if success is False:
+#                    data_to_fit = -intensity[t]
+#                    # Skip points which raise errors in gauss fitting.
+#                    try:
+#                        if p0[1] is None:
+#                            # set initial guess at gaussian mean to be argmax of 
+#                            # intensity
+#                            p0[1] = np.argmax(data_to_fit)
+#                        params = gf.gauss_fit(data_to_fit, p0=p0,
+#                                              retrn="params")
+#                        success = True
+#    
+#                        # bottom and top x_vals
+#                        bot = (params[1] - FWHM_factor*params[2])*self.pixel_size
+#                        top = (params[1] + FWHM_factor*params[2])*self.pixel_size
+#    
+#                        boundary_t_vals.append(t * self.cadence)
+#                        boundary_x_vals_b.append(bot)
+#                        boundary_x_vals_t.append(top)
+#                        
+#                        p0 = params
+#                    except RuntimeError:
+#                        pass
+#                else:
+                    ###############################
+                    # Crop gaussian range if jump
+                    ###############################
+#                    # crop distance range to just around previous boundaries
+#                    bot_boundary_prev = int(np.round(p0[1] - FWHM_factor*p0[2]))
+#                    top_boundary_prev = int(np.round(p0[1] + FWHM_factor*p0[2]))
+#                    
+#                    bot_of_data = max(bot_boundary_prev - stabilise, 0)
+#                    top_of_data = min(top_boundary_prev + stabilise,
+#                                      len(-intensity[t]))
+#
+#                    data_to_fit = -intensity[t][bot_of_data:top_of_data]
+#
+#                    p0[1] = p0[1] - bot_of_data
+#                    try:
+#                        params = gf.gauss_fit(data_to_fit, p0=p0,
+#                                              retrn="params")
+#
+#                        p0_new = params
+#                        p0_new[1] = p0_new[1] + bot_of_data
+#
+#                        bot = (p0_new[1] - FWHM_factor*p0_new[2])*self.pixel_size
+#                        top = (p0_new[1] + FWHM_factor*p0_new[2])*self.pixel_size
+#
+#                        # if big jump in width, just skip and use prev params for next
+#                        if top - bot < 2.5*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
+#                            boundary_t_vals.append(t * self.cadence)
+#                            boundary_x_vals_b.append(bot)
+#                            boundary_x_vals_t.append(top)
+#
+#                            p0 = p0_new
+#                    except RuntimeError:
+#                        pass
 
         if plot is True:
             num = np.sqrt((slit_coords[1] - slit_coords[0])**2
@@ -334,8 +405,8 @@ class Full_map:
                                0, num*self.pixel_size], cmap="afmhot")
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
-            plt.plot(boundary_t_vals, boundary_x_vals_b, 'bo')
-            plt.plot(boundary_t_vals, boundary_x_vals_t, 'bo')
+            plt.plot(boundary_t_vals, boundary_x_vals_b, 'wo')
+            plt.plot(boundary_t_vals, boundary_x_vals_t, 'wo')
             plt.ylim([0, num*self.pixel_size])
             if savefig is not None:
                 plt.savefig(savefig)

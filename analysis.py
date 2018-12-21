@@ -13,8 +13,8 @@ from boundary_data import *
 show_time_distance_data = False
 do_fibril_inversion = False
 
-show_time_distance_data = True
-#do_fibril_inversion = True
+#show_time_distance_data = True
+do_fibril_inversion = True
 
 ############################################################
 
@@ -32,8 +32,8 @@ if show_time_distance_data is True:
 #                             p0=[0.1, 10., 10., -1.0], gauss_fit=True, savefig=None)
     boundaries = morton12.find_boundaries(slit_coords=slit_coords,
                                           moving_average=True, num_wtd_av=3,
-                                          p0=p0_gauss, stabilise=False,
-                                          plot=True, savefig=None)
+                                          p0=p0_gauss, stabilise=stabilise,
+                                          plot=True, savefig="plots/fibril1_dt.png")
 #    multi_boundaries = morton12.find_multi_slit_boundaries(slit_coords=slit_coords,
 #                                                           num_slits=5,
 #                                                           slit_distance=10., moving_average=False,
@@ -72,7 +72,7 @@ if show_time_distance_data is True:
 #    print("phase speed is ", phase_speed)
 
 if do_fibril_inversion is True:
-    fibril = fi.Fibril(yb_pix, yt_pix, t_vals, trend_range=trend_range)
+    fibril = fi.Fibril(yb, yt, t_vals, trend_range=trend_range)
     fibril.smooth(smooth_indices)
     if unit == "pix":
         fibril.pix_to_km()

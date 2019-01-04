@@ -13,8 +13,8 @@ from boundary_data import *
 show_time_distance_data = False
 do_fibril_inversion = False
 
-#show_time_distance_data = True
-do_fibril_inversion = True
+show_time_distance_data = True
+#do_fibril_inversion = True
 
 ############################################################
 
@@ -41,10 +41,11 @@ if show_time_distance_data is True:
 #                                                           savefig=None)
     
 #    [0.5, 45., 10., -1.1]
-#    widths = morton12.find_multi_slit_widths(slit_coords=slit_coords,
-#                                             num_slits=5, slit_distance=5.,
-#                                             p0=[0.5, 45., 10., -1.1],
-#                                             plot=True)
+    widths = morton12.find_multi_slit_widths(slit_coords=slit_coords,
+                                             moving_average=True, num_wtd_av=3,
+                                             num_slits=5, slit_distance=5.,
+                                             p0=p0_gauss, stabilise=stabilise,
+                                             plot=True)
     
     
     # Testing cross-correlation time lag between slit width signals
@@ -79,7 +80,8 @@ if do_fibril_inversion is True:
     elif unit != "km":
         raise ValueError('unit must be "pix" or "km" in boundary_data.py')
 
-    sin_fit = fibril.sin_fitting(N=N, p0=p0, plot=True)
-    fibril.trend_plot(N)
-
-    fibril.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2, mode)
+    sin_fit = fibril.sin_fitting(N=N, p0=p0, plot=True)#, savefig=["plots/fibril1_detrend_b.png", "plots/fibril1_detrend_t.png"])
+    fibril.trend_plot(N)#, savefig="plots/fibril1_trend.png")
+    
+    for vA_guess in range(1, 100):
+        print(fibril.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2, mode)[0])

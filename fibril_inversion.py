@@ -187,10 +187,10 @@ class Fibril:
         yt_params, yt_params_covar = curve_fit(sin_func, t_vals_sub,
                                                self.detrend(N, trend_type)[1],
                                                p0=p0)
-        print("\nTOP: Amp = " "%.4g" % yt_params[0] + " km, Freq = "
-              "%.4g" % yt_params[1] + " s-1 \n\nBOTTOM: Amp = "
-              "%.4g" % yb_params[0] + " km, Freq = "
-              "%.4g" % yb_params[1] + " s-1\n")
+#        print("\nTOP: Amp = " "%.4g" % yt_params[0] + " km, Freq = "
+#              "%.4g" % yt_params[1] + " s-1 \n\nBOTTOM: Amp = "
+#              "%.4g" % yb_params[0] + " km, Freq = "
+#              "%.4g" % yb_params[1] + " s-1\n")
 
         sin_fit = [sin_func(self.t_vals_cont_sub, yb_params[0], yb_params[1],
                             yb_params[2]), yb_params,
@@ -245,7 +245,12 @@ class Fibril:
         w = (sin_fit[1][1] + sin_fit[3][1]) / 2.  # freq
         k = w / c_phase  # wavenumber
         x0 = self.width(N) / 2  # half-width of structure
-        RA = sin_fit[3][0] / sin_fit[1][0]  # amplitude ratio
+        # amplitude ratio
+        RA = sin_fit[3][0] / sin_fit[1][0]
+        if mode == "saus":
+            RA = - abs(RA)
+        elif mode == "kink":
+            RA = abs(RA)
 
         if mode == "saus" and RA >= 0:
             warnings.warn("Warning: You have identified this mode as 'saus' "
@@ -253,5 +258,6 @@ class Fibril:
 
         vA_sol = asi.alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA,
                                          mode)
-        print("Amplitude ratio ~ " + "%.4g" % RA)
-        print("AR inversion: vA ~ " + "%.4g" % vA_sol + " km s-1")
+        return vA_sol
+#        print("Amplitude ratio ~ " + "%.4g" % RA)
+#        print("AR inversion: vA ~ " + "%.4g" % vA_sol + " km s-1")

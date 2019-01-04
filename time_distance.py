@@ -449,7 +449,7 @@ class Full_map:
     def find_multi_slit_boundaries(self, slit_coords, num_slits=1,
                                    slit_distance=1., moving_average=False,
                                    wtd_av_distance=1., num_wtd_av=5,
-                                   p0=[0.5, 45., 10., -1.1],
+                                   p0=[0.5, 45., 10., -1.1], stabilise=False,
                                    plot=False, savefig=None):
         """
 #        Find boundaries of the structure using gauss fitting. The edges are the
@@ -468,7 +468,8 @@ class Full_map:
         middle_slit = self.find_boundaries(slit_coords=slit_coords,
                                            moving_average=moving_average,
                                            wtd_av_distance=wtd_av_distance,
-                                           num_wtd_av=num_wtd_av, p0=p0)
+                                           num_wtd_av=num_wtd_av, p0=p0,
+                                           stabilise=stabilise)
         multi_boundaries.append(middle_slit)
 
         x0 = slit_coords[0]
@@ -493,12 +494,14 @@ class Full_map:
             slit_r = self.find_boundaries(slit_coords=slit_coords_r,
                                           moving_average=moving_average,
                                           wtd_av_distance=wtd_av_distance,
-                                          num_wtd_av=num_wtd_av, p0=p0)
+                                          num_wtd_av=num_wtd_av, p0=p0,
+                                          stabilise=stabilise)
 
             slit_l = self.find_boundaries(slit_coords=slit_coords_l,
                                           moving_average=moving_average,
                                           wtd_av_distance=wtd_av_distance,
-                                          num_wtd_av=num_wtd_av, p0=p0)
+                                          num_wtd_av=num_wtd_av, p0=p0,
+                                          stabilise=stabilise)
             multi_boundaries.append(slit_r)
             multi_boundaries.insert(0, slit_l)
 
@@ -523,7 +526,7 @@ class Full_map:
 
     def find_multi_slit_widths(self, slit_coords, num_slits=1, slit_distance=1.,
                                moving_average=False, wtd_av_distance=1.,
-                               num_wtd_av=5, p0=[0.5, 45., 10., -1.1],
+                               num_wtd_av=5, p0=[0.5, 45., 10., -1.1], stabilise=False,
                                plot=False, savefig=None):
         multi_boundaries = self.find_multi_slit_boundaries(slit_coords=slit_coords,
                                                            num_slits=num_slits,
@@ -531,7 +534,7 @@ class Full_map:
                                                            moving_average=moving_average,
                                                            wtd_av_distance=wtd_av_distance,
                                                            num_wtd_av=num_wtd_av,
-                                                           p0=p0)
+                                                           p0=p0, stabilise=stabilise)
         widths = []
         for i, mb in enumerate(multi_boundaries):
             widths.append([np.array(mb[1]) - np.array(mb[0]),
@@ -545,10 +548,13 @@ class Full_map:
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
 #            plt.ylim([0, num*self.pixel_size])
+            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
             for i, width in enumerate(widths):
                 width_shift = width[0] + i*slit_distance*self.pixel_size
-                plt.plot(width[1], width_shift, 'o')
-                plt.plot(width[1], convolve(width_shift, Box1DKernel(3)))
+                plt.errorbar(width[1], width_shift, yerr=self.pixel_size,
+                             fmt='none', color=color_list[i])
+                plt.plot(width[1], convolve(width_shift, Box1DKernel(3)),
+                         color=color_list[i])
             if savefig is not None:
                 plt.savefig(savefig)
         return widths

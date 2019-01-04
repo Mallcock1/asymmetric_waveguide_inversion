@@ -217,11 +217,14 @@ if fibril_1 is True:
 
     slit_coords = [420, 424, 615.6, 565.6]  # This is what the boundary data above is from: [425, 429, 616, 566] (actually it's not)
     
+    smooth_indices = []
+    
 #    slit_coords = stretch_slit(slit_coords, 1.5)
     t_start = 151
     time_range = slice(t_start, 225)  # slice(151, 225)  # in frames
-
-    trend_range = slice(0, 58)
+    
+    trend_range = None
+#    trend_range = slice(0, 67)
 
     cad = 7.68  # temporal resolution (cadence) of the ROSA instrument in s
 
@@ -232,14 +235,14 @@ if fibril_1 is True:
     stabilise = 10
 
     # Degree of the trend polynomial
-    N = 2
+    N = 3
     p0 = [100., 0.01, 0.]
 
-    vA_guess = 30.  # 100.  # estimate from morton 12
+    vA_guess = 100.  # 100.  # estimate from morton 12
     c0 = 10.  # estimate given in Morton 12
-    R1 = 0.2  # R1 := rho_1 / rho_0
-    R2 = 0.1  # R2 := rho_2 / rho_0
-    c_phase = 47  # Morton found this: 71.
+    R1 = 0.1  # R1 := rho_1 / rho_0
+    R2 = 0.2  # R2 := rho_2 / rho_0
+    c_phase = 47.  # Morton found this: 71.
     mode = "kink"
 
 

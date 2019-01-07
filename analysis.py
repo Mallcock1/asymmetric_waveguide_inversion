@@ -30,10 +30,10 @@ if show_time_distance_data is True:
 #                          savefig="plots/" + fibril_number + "_dt.png")
 #    morton12.intensity_slice(slit_coords=slit_coords, time_slice=[130],
 #                             p0=[0.1, 10., 10., -1.0], gauss_fit=True, savefig=None)
-    boundaries = morton12.find_boundaries(slit_coords=slit_coords,
-                                          moving_average=True, num_wtd_av=3,
-                                          p0=p0_gauss, stabilise=stabilise,
-                                          plot=True, savefig="plots/fibril1_dt.png")
+#    boundaries = morton12.find_boundaries(slit_coords=slit_coords,
+#                                          moving_average=True, num_wtd_av=3,
+#                                          p0=p0_gauss, stabilise=stabilise,
+#                                          plot=True, savefig="plots/fibril1_dt.png")
 #    multi_boundaries = morton12.find_multi_slit_boundaries(slit_coords=slit_coords,
 #                                                           num_slits=5,
 #                                                           slit_distance=10., moving_average=False,
@@ -43,10 +43,15 @@ if show_time_distance_data is True:
 #    [0.5, 45., 10., -1.1]
     widths = morton12.find_multi_slit_widths(slit_coords=slit_coords,
                                              moving_average=True, num_wtd_av=3,
-                                             num_slits=5, slit_distance=5.,
+                                             num_slits=3, slit_distance=5.,
                                              p0=p0_gauss, stabilise=stabilise,
-                                             plot=True)
+                                             plot=True, savefig="plots/fibril1_widths.png")
     
+#    multi_axes = morton12.find_multi_slit_axes(slit_coords=slit_coords,
+#                                             moving_average=True, num_wtd_av=3,
+#                                             num_slits=5, slit_distance=5.,
+#                                             p0=p0_gauss, stabilise=stabilise,
+#                                             plot=True)
     
     # Testing cross-correlation time lag between slit width signals
 #    lag = np.argmax(correlate(widths[0][0], widths[-1][0]))

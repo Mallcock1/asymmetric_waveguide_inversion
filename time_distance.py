@@ -452,8 +452,8 @@ class Full_map:
                                    p0=[0.5, 45., 10., -1.1], stabilise=False,
                                    plot=False, savefig=None):
         """
-#        Find boundaries of the structure using gauss fitting. The edges are the
-#        half-maximum points on each side of the structure.
+        Find boundaries of the structure using gauss fitting. The edges are the
+        half-maximum points on each side of the structure.
 
         Inputs:
             slit_coords = [xinit, xfinal, yinit, yfinal],
@@ -523,6 +523,54 @@ class Full_map:
                 plt.savefig(savefig)
 
         return multi_boundaries
+    
+    def find_multi_slit_axes(self, slit_coords, num_slits=1,
+                             slit_distance=1., moving_average=False,
+                             wtd_av_distance=1., num_wtd_av=5,
+                             p0=[0.5, 45., 10., -1.1], stabilise=False,
+                             plot=False, savefig=None):
+        """
+        Find axis at each time step.
+
+        Inputs:
+            slit_coords = [xinit, xfinal, yinit, yfinal],
+            p0 = initial [amplitude, mean, standard deviation, offset],
+            savefig = None (not saved) or saved name string.
+        """
+
+        multi_boundaries = self.find_multi_slit_boundaries(slit_coords=slit_coords,
+                                                           num_slits=num_slits,
+                                                           slit_distance=slit_distance,
+                                                           moving_average=moving_average,
+                                                           wtd_av_distance=wtd_av_distance,
+                                                           num_wtd_av=num_wtd_av,
+                                                           p0=p0, stabilise=stabilise)
+        
+        multi_axes = []
+        for i,mb in enumerate(multi_boundaries):
+            multi_axes.append([(np.array(mb[0]) + np.array(mb[1]))/2,
+                               np.array(mb[2])])
+            
+        if plot is True:
+#            num = np.sqrt((slit_coords[1] - slit_coords[0])**2
+#                          + (slit_coords[3] - slit_coords[2])**2)
+            plt.figure()
+
+            plt.xlabel('Time (s)')
+            plt.ylabel('Distance (km)')
+#            plt.ylim([0, num*self.pixel_size])
+            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
+            for i, ma in enumerate(multi_axes):
+                ma_shift = ma[0] + i*slit_distance*self.pixel_size
+                plt.errorbar(ma[1], ma_shift, yerr=self.pixel_size,
+                             fmt='none', color=color_list[i])
+                plt.plot(ma[1], convolve(ma_shift, Box1DKernel(3)),
+                         color=color_list[i])
+            if savefig is not None:
+                plt.savefig(savefig)
+
+        return multi_axes
+
 
     def find_multi_slit_widths(self, slit_coords, num_slits=1, slit_distance=1.,
                                moving_average=False, wtd_av_distance=1.,
@@ -557,4 +605,5 @@ class Full_map:
                          color=color_list[i])
             if savefig is not None:
                 plt.savefig(savefig)
+
         return widths

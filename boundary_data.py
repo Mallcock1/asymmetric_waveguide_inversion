@@ -13,9 +13,9 @@ fibril_2 = False
 fibril_3 = False
 fibril_4 = False
 
-fibril_1 = True
+#fibril_1 = True
 #fibril_2 = True
-#fibril_3 = True
+fibril_3 = True
 #fibril_4 = True
 
 ############################################################
@@ -242,7 +242,7 @@ if fibril_1 is True:
     c0 = 10.  # estimate given in Morton 12
     R1 = 0.1  # R1 := rho_1 / rho_0
     R2 = 0.2  # R2 := rho_2 / rho_0
-    c_phase = 47.  # Morton found this: 71.
+    c_phase = 63. # 47.  # Morton found this: 71.
     mode = "kink"
 
 
@@ -253,7 +253,7 @@ if fibril_2 is True:
     print("You have chosen fibril_2")
     fibril_number = "fibril2"
 
-    yb_pix = np.array([31.924199989670257,
+    yb = np.array([31.924199989670257,
                        33.55552590115389,
                        34.41517726955584,
                        34.7120289190419,
@@ -326,7 +326,7 @@ if fibril_2 is True:
                        49.00280796323902,
                        46.211029628742686])
 
-    yt_pix = np.array([51.80763726015182,
+    yt = np.array([51.80763726015182,
                        50.717543662763696,
                        51.30231378375507,
                        51.13195059182715,
@@ -407,25 +407,27 @@ if fibril_2 is True:
     
     t_start = 0
     time_range = slice(t_start, 71)
-    trend_range = slice(25, -1)
+    trend_range = None # slice(25, -1)
 
     cad = 7.68  # temporal resolution (cadence) of the ROSA instrument in s
     
-    t_vals = np.arange(len(yb_pix))*cad + t_start
+    t_vals = np.arange(len(yb))*cad + t_start
 
     p0_gauss = [0.1, None, 10., -1.0]
     
     stabilise = False
 
     # Degree of the trend polynomial
-    N = 2
-    p0 = [100., 0.01, 0.]
+    N = 3
+    
+    # initial values for sin
+    p0 = [100., 0.03, 0.]
 
     vA_guess = 100.  # estimate from morton 12
     c0 = 10.  # estimate given in Morton 12
     R1 = 0.2  # R1 := rho_1 / rho_0
     R2 = 0.1  # R2 := rho_2 / rho_0
-    c_phase = 71.
+    c_phase = 63.
     mode = "saus"
 
 
@@ -526,29 +528,36 @@ if fibril_3 is True:
 
     unit = "km"
 
-    smooth_indices = [24]
+#    smooth_indices = [24]
 
     slit_coords = [775, 775, 430, 490]
+    
+    t_start = 132
+    time_range = slice(t_start, 175)
+    trend_range = None # slice(25, -1)
 
-    #time_window_frames = np.array([100,140]) #in frames 
-    time_window_frames = np.array([132,175]) #in frames
+    time_window_frames = np.array([100,140]) #in frames 
+#    time_window_frames = np.array([132,175]) #in frames
 
-    time_range = slice(10, -1)
+
+
+
+#    time_range = slice(10, -1)
 
     cad = 7.68  # temporal resolution (cadence) of the ROSA instrument in s
     t_start = 0
 
     t_vals = np.arange(len(yb))*cad + t_start
     
-    p0_gauss [0.1, 10., 10., -1.0]
+    p0_gauss = [0.1, None, 10., -1.0]
     
     # Degree of the trend polynomial
-    N = 2
-    p0 = [100., 0.01, 0.]
+    N = 3
+    p0 = [100., 0.08, 0.]
 
     vA_guess = 100.  # estimate from morton 12
     c0 = 10.  # estimate given in Morton 12
-    R1 = 0.2  # R1 := rho_1 / rho_0
-    R2 = 0.1  # R2 := rho_2 / rho_0
-    c_phase = 71.
+    R1 = 0.1  # R1 := rho_1 / rho_0
+    R2 = 0.2  # R2 := rho_2 / rho_0
+    c_phase = 63.
     mode = "saus"

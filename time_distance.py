@@ -524,7 +524,7 @@ class Full_map:
 
         return multi_boundaries
     
-    def find_multi_slit_axes(self, slit_coords, num_slits=1,
+    def find_multi_slit_axis(self, slit_coords, num_slits=1,
                              slit_distance=1., moving_average=False,
                              wtd_av_distance=1., num_wtd_av=5,
                              p0=[0.5, 45., 10., -1.1], stabilise=False,
@@ -546,9 +546,9 @@ class Full_map:
                                                            num_wtd_av=num_wtd_av,
                                                            p0=p0, stabilise=stabilise)
         
-        multi_axes = []
+        multi_axis = []
         for i,mb in enumerate(multi_boundaries):
-            multi_axes.append([(np.array(mb[0]) + np.array(mb[1]))/2,
+            multi_axis.append([(np.array(mb[0]) + np.array(mb[1]))/2,
                                np.array(mb[2])])
             
         if plot is True:
@@ -559,8 +559,9 @@ class Full_map:
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
 #            plt.ylim([0, num*self.pixel_size])
-            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
-            for i, ma in enumerate(multi_axes):
+#            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
+            color_list = [(0,0,0), (0.5,0,0), (1,0,0)]
+            for i, ma in enumerate(multi_axis):
                 ma_shift = ma[0] + i*slit_distance*self.pixel_size
                 plt.errorbar(ma[1], ma_shift, yerr=self.pixel_size,
                              fmt='none', color=color_list[i])
@@ -569,7 +570,51 @@ class Full_map:
             if savefig is not None:
                 plt.savefig(savefig)
 
-        return multi_axes
+        return multi_axis
+    
+    def find_multi_slit_axis_min_intens(self, slit_coords, num_slits=1,
+                                   slit_distance=1., moving_average=False,
+                                   wtd_av_distance=1., num_wtd_av=5,
+                                   p0=[0.5, 45., 10., -1.1], stabilise=False,
+                                   plot=False, savefig=None):
+        """
+        Inputs:
+            slit_coords = [xinit, xfinal, yinit, yfinal],
+            p0 = initial [amplitude, mean, standard deviation, offset],
+            savefig = None (not saved) or saved name string.
+        """
+        time_range_s = [self.time_range[0] * self.cadence,
+                        self.time_range[1] * self.cadence]  # in s
+        number_of_frames = self.time_range[1] - self.time_range[0]
+        time_vals = np.linspace(self.time_range[0], self.time_range[1],
+                                number_of_frames + 1)
+
+        if num_slits % 2 != 1:
+            raise ValueError("num_slits must be an odd number.")
+
+        multi_axis = []
+        intensity = self.distancetime(slit_coords=slit_coords,
+                                      moving_average=moving_average,
+                                      wtd_av_distance=wtd_av_distance,
+                                      num_wtd_av=num_wtd_av)
+
+        for i, t in enumerate(time_vals):
+            t = int(t)
+            multi_axis.append(np.argmax(-intensity[t]))
+
+        if plot is True:
+            num = np.sqrt((slit_coords[1] - slit_coords[0])**2
+                          + (slit_coords[3] - slit_coords[2])**2)
+            plt.figure()
+            plt.xlabel('Time (s)')
+            plt.ylabel('Distance (km)')
+            plt.ylim([0, num*self.pixel_size])
+            plt.plot(time_vals, multi_axis, 'o')
+#            plt.plot(boundary[2], convolve(boundary_shift_b, Box1DKernel(3)))
+            if savefig is not None:
+                plt.savefig(savefig)
+
+        return multi_axis
 
 
     def find_multi_slit_widths(self, slit_coords, num_slits=1, slit_distance=1.,
@@ -596,7 +641,8 @@ class Full_map:
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
 #            plt.ylim([0, num*self.pixel_size])
-            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
+#            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
+            color_list = [(0,0,0), (0.5,0,0), (1,0,0)]
             for i, width in enumerate(widths):
                 width_shift = width[0] + i*slit_distance*self.pixel_size
                 plt.errorbar(width[1], width_shift, yerr=self.pixel_size,

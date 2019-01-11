@@ -79,19 +79,30 @@ class Fibril:
 
     def smooth(self, indices_of_anomalies):
         """
-        Linearly smooth over any known isolated anomolies.
+        Linearly smooth over any anomolies.
 
         Inputs:
-            indicies_of_anomolies = list of isolated indices.
+            indicies_of_anomolies = list of indices of isolated anomolies or of
+            lists of non-isolated anomolies.
         """
         for i in indices_of_anomalies:
-            self.yb[i] = 0.5*(self.yb[i+1] + self.yb[i-1])
-            self.yt[i] = 0.5*(self.yt[i+1] + self.yt[i-1])
+            if type(i) is int:
+                self.yb[i] = 0.5*(self.yb[i+1] + self.yb[i-1])
+                self.yt[i] = 0.5*(self.yt[i+1] + self.yt[i-1])
+            elif type(i) is list:
+                length = len(i)
+                prev = i[0] - 1
+                after = i[-1] + 1
+                grad_b = (self.yb[after] - self.yb[prev]) / (length + 1)
+                grad_t = (self.yt[after] - self.yt[prev]) / (length + 1)
+                for n, j in enumerate(i):
+                    self.yb[j] = self.yb[prev] + n * grad_b
+                    self.yt[j] = self.yt[prev] + n * grad_t
 
     def trend(self, data, N=3):
         """
         Return a trend function (for each boundary) via least-squares
-        regression fora polynomial of degree N.
+        regression for a polynomial of degree N.
 
         Inputs:
             data = input id data as numpy array,
@@ -181,12 +192,21 @@ class Fibril:
         
         def sin_func(x, a, b, c):  # a=amplitude, b=angular frequency
             return a * np.sin(b * x + c)
+
+        # different p0 for top and bottom
+        if type(p0) is not list:
+            p0_b = p0
+            p0_t = p0
+        elif type(p0) is list:
+            p0_b = p0[0]
+            p0_t = p0[1]
+
         yb_params, yb_params_covar = curve_fit(sin_func, t_vals_sub,
                                                self.detrend(N, trend_type)[0],
-                                               p0=p0)
+                                               p0=p0_b)
         yt_params, yt_params_covar = curve_fit(sin_func, t_vals_sub,
                                                self.detrend(N, trend_type)[1],
-                                               p0=p0)
+                                               p0=p0_t)
 #        print("\nTOP: Amp = " "%.4g" % yt_params[0] + " km, Freq = "
 #              "%.4g" % yt_params[1] + " s-1 \n\nBOTTOM: Amp = "
 #              "%.4g" % yb_params[0] + " km, Freq = "

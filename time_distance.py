@@ -59,8 +59,8 @@ class Full_map:
             self.total_maps[i][0].data = m[0].data[bottom_left[0]:top_right[0],
                                                    bottom_left[1]:top_right[1]]
 
-    def animate(self, slit_coords=None, interval=200, repeat_delay=1000,
-                savefig=None):
+    def animate(self, slit_coords=None, multi_slit=False, interval=200,
+                repeat_delay=1000, savefig=None):
         """
         Plot an animation of the data with optional overlayed slit.
 
@@ -89,24 +89,45 @@ class Full_map:
                                       repeat_delay=repeat_delay)
 
         if slit_coords is not None:
-            plt.plot(slit_coords[:2], slit_coords[2:], color='white')
-
-            # testing moving average slits
-            x0 = slit_coords[0]
-            x1 = slit_coords[1]
-            y0 = slit_coords[2]
-            y1 = slit_coords[3]
-
-            m_prime = (x0 - x1) / (y1 - y0)
-
-            alpha = 5.  # / np.sqrt(1 + m_prime**2)
-            for i in range(1, 3):
-                plt.plot([x0 + i*alpha, x1 + i*alpha],
-                         [y0 + i*alpha*m_prime, y1 + i*alpha*m_prime],
-                         color='yellow')
-                plt.plot([x0 - i*alpha, x1 - i*alpha],
-                         [y0 - i*alpha*m_prime, y1 - i*alpha*m_prime],
-                         color='green')
+            if type(slit_coords[0]) is not list:
+                plt.plot(slit_coords[:2], slit_coords[2:], color='white')
+                if multi_slit is True:
+                    # testing moving average slits
+                    x0 = slit_coords[0]
+                    x1 = slit_coords[1]
+                    y0 = slit_coords[2]
+                    y1 = slit_coords[3]
+        
+                    m_prime = (x0 - x1) / (y1 - y0)
+        
+                    alpha = 5.  # / np.sqrt(1 + m_prime**2)
+                    for i in range(1, 3):
+                        plt.plot([x0 + i*alpha, x1 + i*alpha],
+                                 [y0 + i*alpha*m_prime, y1 + i*alpha*m_prime],
+                                 color='yellow')
+                        plt.plot([x0 - i*alpha, x1 - i*alpha],
+                                 [y0 - i*alpha*m_prime, y1 - i*alpha*m_prime],
+                                 color='green')
+            else:
+                for s_c in slit_coords:
+                    plt.plot(s_c[:2], s_c[2:], color='white')
+                    if multi_slit is True:
+                        # testing moving average slits
+                        x0 = s_c[0]
+                        x1 = s_c[1]
+                        y0 = s_c[2]
+                        y1 = s_c[3]
+            
+                        m_prime = (x0 - x1) / (y1 - y0)
+            
+                        alpha = 5.  # / np.sqrt(1 + m_prime**2)
+                        for i in range(1, 3):
+                            plt.plot([x0 + i*alpha, x1 + i*alpha],
+                                     [y0 + i*alpha*m_prime, y1 + i*alpha*m_prime],
+                                     color='yellow')
+                            plt.plot([x0 - i*alpha, x1 - i*alpha],
+                                     [y0 - i*alpha*m_prime, y1 - i*alpha*m_prime],
+                                     color='green')
 
         plt.show()
 

@@ -194,10 +194,10 @@ class Fibril:
             return a * np.sin(b * x + c)
 
         # different p0 for top and bottom
-        if type(p0) is not list:
+        if type(p0[0]) is not list:
             p0_b = p0
             p0_t = p0
-        elif type(p0) is list:
+        elif type(p0[0]) is list:
             p0_b = p0[0]
             p0_t = p0[1]
 

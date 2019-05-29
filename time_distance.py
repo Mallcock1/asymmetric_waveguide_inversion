@@ -21,8 +21,8 @@ warnings.filterwarnings("ignore")
 
 
 class Full_map:
-    def __init__(self, file_path, time_range=None, pixel_size=50.,
-                 cadence=7.68):
+    def __init__(self, file_path, bottom_left=None, top_right=None,
+                 time_range=None, pixel_size=50., cadence=7.68):
         """
         Inputs:
             file_path = path to directory containing .fits files,
@@ -46,8 +46,16 @@ class Full_map:
                            range(0, 238)[self.time_range][-1]]
         self.pixel_size = pixel_size
         self.cadence = cadence
+        if bottom_left is None:
+            self.bottom_left = [0, 0]
+        else:
+            self.bottom_left = bottom_left
+        if top_right is None:
+            self.top_right = [720, 780]
+        else:
+            self.top_right = top_right
 
-    def crop(self, bottom_left, top_right):
+    def crop(self):
         """
         Crop the map.
 
@@ -56,8 +64,74 @@ class Full_map:
             top_right = [x, y].
         """
         for i, m in enumerate(self.total_maps):
-            self.total_maps[i][0].data = m[0].data[bottom_left[0]:top_right[0],
-                                                   bottom_left[1]:top_right[1]]
+            self.total_maps[i][0].data = m[0].data[self.bottom_left[0]:self.top_right[0],
+                                                   self.bottom_left[1]:self.top_right[1]]
+
+    def image(self, time, slit_coords=None, multi_slit=False, savefig=None):
+        """
+        Plot an still image of the data at time t with optional overlayed slit.
+
+        Inputs:
+            slit_coords = [xinit, xfinal, yinit, yfinal],
+            savefig = None (not saved) or saved name string.
+        """
+        p = self.pixel_size
+        fig = plt.figure()
+
+        im = plt.imshow(self.total_maps[time][0].data,
+                        aspect='auto', interpolation=None, origin='lower',
+                        extent=[self.bottom_left[1]*p, self.top_right[1]*p,
+                                self.bottom_left[0]*p, self.top_right[0]*p], cmap="afmhot")
+
+
+        if slit_coords is not None:
+            if type(slit_coords[0]) is not list:
+                slit_coords = np.array(slit_coords)
+                plt.plot(slit_coords[:2]*p, slit_coords[2:]*p, color='white')
+                if multi_slit is True:
+                    # testing moving average slits
+                    x0 = slit_coords[0]
+                    x1 = slit_coords[1]
+                    y0 = slit_coords[2]
+                    y1 = slit_coords[3]
+        
+                    m_prime = (x0 - x1) / (y1 - y0)
+        
+                    alpha = 1.  # / np.sqrt(1 + m_prime**2)
+                    for i in range(1, 2):
+                        plt.plot([(x0 + i*alpha)*p, (x1 + i*alpha)*p],
+                                 [(y0 + i*alpha*m_prime)*p, (y1 + i*alpha*m_prime)*p],
+                                 color='white')
+                        plt.plot([(x0 - i*alpha)*p, (x1 - i*alpha)*p],
+                                 [(y0 - i*alpha*m_prime)*p, (y1 - i*alpha*m_prime)*p],
+                                 color='white')
+            else:
+                for s_c in slit_coords:
+                    s_c = np.array(s_c)
+                    plt.plot(s_c[:2]*p, s_c[2:]*p, color='white')
+                    if multi_slit is True:
+                        # testing moving average slits
+                        x0 = s_c[0]
+                        x1 = s_c[1]
+                        y0 = s_c[2]
+                        y1 = s_c[3]
+            
+                        m_prime = (x0 - x1) / (y1 - y0)
+            
+                        alpha = 5.  # / np.sqrt(1 + m_prime**2)
+                        for i in range(1, 3):
+                            plt.plot([(x0 + i*alpha)*p, (x1 + i*alpha)*p],
+                                     [(y0 + i*alpha*m_prime)*p, (y1 + i*alpha*m_prime)*p],
+                                     color='yellow')
+                            plt.plot([(x0 - i*alpha)*p, (x1 - i*alpha)*p],
+                                     [(y0 - i*alpha*m_prime)*p, (y1 - i*alpha*m_prime)*p],
+                                     color='green')
+        plt.xlabel('Distance (km)')
+        plt.ylabel('Distance (km)')
+        plt.show()
+
+        if savefig is not None:
+            ani.save(savefig)
 
     def animate(self, slit_coords=None, multi_slit=False, interval=200,
                 repeat_delay=1000, savefig=None):
@@ -128,7 +202,8 @@ class Full_map:
                             plt.plot([x0 - i*alpha, x1 - i*alpha],
                                      [y0 - i*alpha*m_prime, y1 - i*alpha*m_prime],
                                      color='green')
-
+        plt.xlabel('Distance (km)')
+        plt.ylabel('Distance (km)')
         plt.show()
 
         if savefig is not None:
@@ -662,8 +737,8 @@ class Full_map:
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
 #            plt.ylim([0, num*self.pixel_size])
-#            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
-            color_list = [(0,0,0), (0.5,0,0), (1,0,0)]
+            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
+#            color_list = [(0,0,0), (0.5,0,0), (1,0,0)]
             for i, width in enumerate(widths):
                 width_shift = width[0] + i*slit_distance*self.pixel_size
                 plt.errorbar(width[1], width_shift, yerr=self.pixel_size,

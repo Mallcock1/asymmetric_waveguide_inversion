@@ -1054,7 +1054,7 @@ if fibril_5 is True:
     slit_coords = stretch_slit(slit_coords, 0.2)
     slit_coords = shift_slit(slit_coords, -40)
 
-    t_start = 16 #22
+    t_start = 30 #16 #22
     t_end = 55
     time_range = slice(t_start, t_end)
     trend_range = None  # slice(6, -1)
@@ -1074,7 +1074,7 @@ if fibril_5 is True:
     c0 = 10.  # estimate given in Morton 12
     R1 = 0.1  # R1 := rho_1 / rho_0
     R2 = 0.2  # R2 := rho_2 / rho_0
-    c_phase = 73.
+    c_phase = 129. #73.
     mode = "kink"
     
     

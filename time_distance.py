@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import os
 import matplotlib.animation as animation
 import numpy as np
-import scipy as sc
 import scipy.ndimage
 import gauss_fitting as gf
 from astropy.io import fits
@@ -81,8 +80,8 @@ class Full_map:
         im = plt.imshow(self.total_maps[time][0].data,
                         aspect='auto', interpolation=None, origin='lower',
                         extent=[self.bottom_left[1]*p, self.top_right[1]*p,
-                                self.bottom_left[0]*p, self.top_right[0]*p], cmap="afmhot")
-
+                                self.bottom_left[0]*p, self.top_right[0]*p],
+                        cmap="afmhot")
 
         if slit_coords is not None:
             if type(slit_coords[0]) is not list:
@@ -94,9 +93,9 @@ class Full_map:
                     x1 = slit_coords[1]
                     y0 = slit_coords[2]
                     y1 = slit_coords[3]
-        
+
                     m_prime = (x0 - x1) / (y1 - y0)
-        
+
                     alpha = 1.  # / np.sqrt(1 + m_prime**2)
                     for i in range(1, 2):
                         plt.plot([(x0 + i*alpha)*p, (x1 + i*alpha)*p],
@@ -115,9 +114,9 @@ class Full_map:
                         x1 = s_c[1]
                         y0 = s_c[2]
                         y1 = s_c[3]
-            
+
                         m_prime = (x0 - x1) / (y1 - y0)
-            
+
                         alpha = 5.  # / np.sqrt(1 + m_prime**2)
                         for i in range(1, 3):
                             plt.plot([(x0 + i*alpha)*p, (x1 + i*alpha)*p],
@@ -171,9 +170,9 @@ class Full_map:
                     x1 = slit_coords[1]
                     y0 = slit_coords[2]
                     y1 = slit_coords[3]
-        
+
                     m_prime = (x0 - x1) / (y1 - y0)
-        
+
                     alpha = 5.  # / np.sqrt(1 + m_prime**2)
                     for i in range(1, 3):
                         plt.plot([x0 + i*alpha, x1 + i*alpha],
@@ -229,8 +228,8 @@ class Full_map:
 
         # Number of points we can interpolate along the slit,
         # using pytagoras' theorem
-        num = np.sqrt((slit_coords[1] - slit_coords[0])**2
-                      + (slit_coords[3] - slit_coords[2])**2)
+        num = np.sqrt((slit_coords[1] - slit_coords[0])**2 +
+                      (slit_coords[3] - slit_coords[2])**2)
         print("num = " + str(num))
 
         x = np.linspace(slit_coords[0], slit_coords[1], num)
@@ -283,7 +282,7 @@ class Full_map:
         else:
             for i, m in enumerate(self.total_maps):
                 intensity.append(map_coords(np.transpose(m[0].data),
-                                             np.vstack((x, y))))
+                                            np.vstack((x, y))))
 
         intensity = np.array(intensity)
 
@@ -336,7 +335,7 @@ class Full_map:
             if stabilise is False:
                 data_to_fit = -intensity[t]
                 if p0[1] is None:
-                    # set initial guess at gaussian mean to be argmax of 
+                    # set initial guess at gaussian mean to be argmax of
                     # intensity
                     p0[1] = np.argmax(data_to_fit)
                 # Skip points which raise errors in gauss fitting.
@@ -344,23 +343,26 @@ class Full_map:
                     params = gf.gauss_fit(data_to_fit, p0=p0, retrn="params")
                 except RuntimeError:
                     pass
-    
+
                 # bottom and top x_vals
-                bot = (params[1] - np.sqrt(2*np.log(2))*params[2])*self.pixel_size
-                top = (params[1] + np.sqrt(2*np.log(2))*params[2])*self.pixel_size
-    
+                bot = (params[1] -
+                       np.sqrt(2*np.log(2))*params[2])*self.pixel_size
+                top = (params[1] +
+                       np.sqrt(2*np.log(2))*params[2])*self.pixel_size
+
                 # Just append the first one
                 if i == 0:
                     boundary_t_vals.append(t * self.cadence)
                     boundary_x_vals_b.append(bot)
                     boundary_x_vals_t.append(top)
                 else:
-                    # if big jump in width, just skip and use prev params for next
+                    # if big jump in width, just skip and use prev params for
+                    # next
                     if top - bot < 2*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
                         boundary_t_vals.append(t * self.cadence)
                         boundary_x_vals_b.append(bot)
                         boundary_x_vals_t.append(top)
-    
+
                         p0 = params
             else:
                 ###############################
@@ -368,7 +370,7 @@ class Full_map:
                 ###############################
                 data_to_fit = -intensity[t]
                 if p0[1] is None:
-                    # set initial guess at gaussian mean to be argmax of 
+                    # set initial guess at gaussian mean to be argmax of
                     # intensity
                     p0[1] = np.argmax(data_to_fit)
                 # Skip points which raise errors in gauss fitting.

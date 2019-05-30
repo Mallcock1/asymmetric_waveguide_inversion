@@ -14,7 +14,7 @@ import scipy.ndimage
 import gauss_fitting as gf
 from astropy.io import fits
 from astropy.convolution import convolve, Box1DKernel
-# Nb: this overrides pylab's convolve
+# Nb: the above overrides pylab's convolve
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -340,7 +340,7 @@ class Full_map:
                     p0[1] = np.argmax(data_to_fit)
                 # Skip points which raise errors in gauss fitting.
                 try:
-                    params = gf.gauss_fit(data_to_fit, p0=p0, retrn="params")
+                    params = gf.gauss_fit(data_to_fit, p0=p0, output="params")
                 except RuntimeError:
                     pass
 
@@ -375,7 +375,7 @@ class Full_map:
                     p0[1] = np.argmax(data_to_fit)
                 # Skip points which raise errors in gauss fitting.
                 try:
-                    params = gf.gauss_fit(data_to_fit, p0=p0, retrn="params")
+                    params = gf.gauss_fit(data_to_fit, p0=p0, output="params")
                 except RuntimeError:
                     pass
     
@@ -410,7 +410,7 @@ class Full_map:
                         p0[1] = p0[1] - bot_of_data
                         try:
                             params = gf.gauss_fit(data_to_fit, p0=p0,
-                                                  retrn="params")
+                                                  output="params")
     
                             p0_new = params
                             p0_new[1] = p0_new[1] + bot_of_data
@@ -444,7 +444,7 @@ class Full_map:
 #                            # intensity
 #                            p0[1] = np.argmax(data_to_fit)
 #                        params = gf.gauss_fit(data_to_fit, p0=p0,
-#                                              retrn="params")
+#                                              output="params")
 #                        success = True
 #    
 #                        # bottom and top x_vals
@@ -475,7 +475,7 @@ class Full_map:
 #                    p0[1] = p0[1] - bot_of_data
 #                    try:
 #                        params = gf.gauss_fit(data_to_fit, p0=p0,
-#                                              retrn="params")
+#                                              output="params")
 #
 #                        p0_new = params
 #                        p0_new[1] = p0_new[1] + bot_of_data
@@ -534,9 +534,9 @@ class Full_map:
 
             if gauss_fit is True:
                 # Plot the data with the best-fit model
-                func = gf.gauss_fit(intensity_slice, p0=p0, retrn="func")
+                func = gf.gauss_fit(intensity_slice, p0=p0, output="func")
                 boundaries = gf.gauss_fit(intensity_slice, p0=p0,
-                                          retrn="pos_half_max")
+                                          output="pos_half_max")
 
                 plt.plot(s_vals, func(s_vals), '-', color='red')
                 plt.plot(boundaries[0], boundaries[1], 'ro')

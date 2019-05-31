@@ -280,8 +280,6 @@ class Fibril:
         vA_sol = asi.alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA,
                                          mode)
         return vA_sol
-#        print("Amplitude ratio ~ " + "%.4g" % RA)
-#        print("AR inversion: vA ~ " + "%.4g" % vA_sol + " km s-1")
 
     def AR_inversion_multiple_init(self, p0, N, vA_inits, c_phase, c0, R1,
                                    R2, mode):
@@ -327,6 +325,7 @@ class Fibril:
             print('WARNING: There was more than one mode.')
         elif sample_inversion_proportion < threshold_inversion_proportion:
             print('WARNING: The most common inversion accounted for less ' +
-                  'than ' + str(threshold_inversion_proportion) + '.')
+                  'than ' + str(threshold_inversion_proportion) + ' of the ' +
+                  'inversions.')
 
-        return [vA_inversion[0], sample_inversion_proportion]
+        return np.array([vA_inversion[0][0], sample_inversion_proportion])

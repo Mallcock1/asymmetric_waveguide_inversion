@@ -11,6 +11,7 @@ Defines functions to fit trends and fit sunnysoids to detrended data.
 
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy import stats
 import matplotlib.pyplot as plt
 import alfven_speed_inversion as asi
 import warnings
@@ -268,7 +269,7 @@ class Fibril:
         # amplitude ratio
         RA = sin_fit[3][0] / sin_fit[1][0]
         if mode == "saus":
-            RA = - abs(RA)
+            RA = -abs(RA)
         elif mode == "kink":
             RA = abs(RA)
 
@@ -281,3 +282,51 @@ class Fibril:
         return vA_sol
 #        print("Amplitude ratio ~ " + "%.4g" % RA)
 #        print("AR inversion: vA ~ " + "%.4g" % vA_sol + " km s-1")
+
+    def AR_inversion_multiple_init(self, p0, N, vA_inits, c_phase, c0, R1,
+                                   R2, mode):
+        """
+        Use amplitude ratio technique to acheive an inversion for the Alfven
+        speed inside the fibril using multiple initial vA values to reduce the
+        chance of multiple roots.
+
+        Inputs:
+            p0 = initial [amplitude, frequency, shift],
+            N = degree of trend polynomial,
+            vA_guess = numpy array of initial Alfven speed guesses,
+            Prescribed parameters:
+                c_phase = phase speed,
+                c0 = sound speed,
+                R1 = rho1 / rho0,
+                R2 = rho2 / rho0,
+                mode = identified mode, either 'saus' or 'kink'.
+
+        Output:
+            [Alven speed estimate,
+             proportion of initial guesses that inverted to this value]
+        """
+
+        # Initialise the vector for inverted values
+        vA_inversion_vec = np.zeros_like(vA_inits)
+
+        for i, vA_guess in enumerate(vA_inits):
+            vA_inversion_exact = self.AR_inversion(p0, N, vA_guess, c_phase,
+                                                   c0, R1, R2, mode)[0]
+            vA_inversion_rounded = round(vA_inversion_exact, 2)
+            vA_inversion_vec[i] = abs(vA_inversion_rounded)
+
+        # Calculate the modal value of the vector of inversions
+        vA_inversion = stats.mode(vA_inversion_vec)
+
+        # Set the threshold for necessary proportion of consistent inversions
+        threshold_inversion_proportion = 0.75
+        sample_inversion_proportion = vA_inversion[1][0] / len(vA_inits)
+
+        # Indicators for multiple roots
+        if len(vA_inversion[0]) > 1:
+            print('WARNING: There was more than one mode.')
+        elif sample_inversion_proportion < threshold_inversion_proportion:
+            print('WARNING: The most common inversion accounted for less ' +
+                  'than ' + str(threshold_inversion_proportion) + '.')
+
+        return [vA_inversion[0], sample_inversion_proportion]

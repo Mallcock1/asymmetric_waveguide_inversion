@@ -16,10 +16,12 @@ from boundary_data import *
 
 show_time_distance_data = False
 do_fibril_inversion = False
+include_density_range = False
 
 # Uncomment the things you want
 #show_time_distance_data = True
 do_fibril_inversion = True
+include_density_range = True
 
 ############################################################
 # Specify slit coordinates - place slit perpendicular to dark fibril
@@ -137,37 +139,55 @@ if do_fibril_inversion is True:
     # Plot the trend
     fibril.trend_plot(N, savefig="plots/" + fibril_number + "_trend.png")
 
-    # Alfven speed inversion for 100 initial values to check for consistency
-    # Number of initial values tried
-    N_init = 100
 
-    # Range of initial values
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # Alfven speed inversion for 100 initial values to check for consistency
+    # Number of initial vA values tried
+    N_vA_init = 100
+
+    # Range of initial vA values
     vA_init_min = 1
     vA_init_max = 100
-    vA_init = np.linspace(vA_init_min, vA_init_max, N_init)
+    vA_inits = np.linspace(vA_init_min, vA_init_max, N_vA_init)
+#
+#    if include_density_range is True:
+#        print('A range of densities will be considered.')
+#
+#        R_list = [R1, R2]
+#        # Find the min and max ratio
+#        R_min = np.min(R_list)
+#        R_max = np.max(R_list)
+#        R_min_index = np.argmin(R_list)
+#        R_max_index = np.argmax(R_list)
+#        R_diff = R_max - R_min
+#
+#        print('R' + str(R_max_index + 1) + ' is the largest density ratio ' +
+#              'so will be varied, holding R' + str(R_min_index + 1) +
+#              ' constant.')
+#
+#        # Number of density ratio values tried
+#        N_R = 10
+#        # Range of denisity ratio values
+#        R_range_min = R_max - 0.9*R_diff
+#        R_range_max = R_max + 2*R_diff
+#        R_range = np.linspace(R_min, R_max, N_R)
 
-    # Initialise the vector for inverted values
-    vA_inversion_vec = np.zeros_like(vA_init)
-
-    for i, vA_guess in enumerate(vA_init):
-        vA_inversion_exact = fibril.AR_inversion(p0, N, vA_guess, c_phase, c0,
-                                                  R1, R2, mode)[0]
-        vA_inversion_rounded = round(vA_inversion_exact, 2)
-        vA_inversion_vec[i] = abs(vA_inversion_rounded)
-
-#    vA_inversion_vec = abs(vA_inversion_vec)
-
-    # calculate the mode of the above vector of inversions
-    vA_inversion = stats.mode(vA_inversion_vec)
-    threshold_inversion_proportion = 0.9
-
-    # Indicators for multiple roots
-    if len(vA_inversion[0]) > 1:
-        print('WARNING: There was more than one mode.')
-    elif vA_inversion[1][0] / len(vA_inversion_vec) < threshold_inversion_proportion:
-        print('WARNING: The most common inversion accounted for less than ' +
-              str(threshold_inversion_proportion) + '.')
+    vA_inversion = fibril.AR_inversion_multiple_init(p0, N, vA_inits, c_phase,
+                                                     c0, R1, R2, mode)
 
     print('Estimated vA in ' + fibril_number + ' is: ' +
-          str(vA_inversion[0]) + '.\nIt appeared ' + str(vA_inversion[1]) +
-          ' out of ' + str(len(vA_inversion_vec)) + ' inversions.')
+          str(vA_inversion[0][0]) + '.\nThis value was output for ' +
+          str(vA_inversion[1]) + ' of the ' + str(N_vA_init) + ' initial ' +
+          'values.')

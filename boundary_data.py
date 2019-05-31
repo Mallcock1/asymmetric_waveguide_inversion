@@ -14,11 +14,11 @@ fibril_3 = False
 fibril_4 = False
 fibril_5 = False
 
-#fibril_1 = True
+fibril_1 = True
 #fibril_2 = True
 #fibril_3 = True
 #fibril_4 = True
-fibril_5 = True
+#fibril_5 = True
 
 ############################################################
 # Fibril 1 (pixel counting from Fig 4 in Morton et al 2012)

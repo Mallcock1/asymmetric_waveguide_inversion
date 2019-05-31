@@ -8,6 +8,7 @@ time-distance plots, and complete seismological inversion.
 """
 
 import numpy as np
+from scipy import stats
 from scipy.signal import correlate
 import time_distance as td
 import fibril_inversion as fi
@@ -17,8 +18,8 @@ show_time_distance_data = False
 do_fibril_inversion = False
 
 # Uncomment the things you want
-show_time_distance_data = True
-#do_fibril_inversion = True
+#show_time_distance_data = True
+do_fibril_inversion = True
 
 ############################################################
 # Specify slit coordinates - place slit perpendicular to dark fibril
@@ -42,17 +43,18 @@ if show_time_distance_data is True:
 
     # Retrieve the data
     morton12 = td.Full_map(file_path, time_range=time_range)
+
     # Crop data to specified viewing box
     morton12.crop()
 
-    # Create animation of data
-#    morton12.animate(slit_coords=slit_coords, interval=100)#,
+    # Animate data through time
+    morton12.animate(slit_coords=slit_coords, interval=100)#,
 #                     savefig="plots/ani_all.mp4")  # "plots/animation.mp4")
 #    morton12.animate(slit_coords=slit_coords, interval=100,
 #                     savefig="plots/" + fibril_number + "_ani.mp4")  # "plots/animation.mp4")
 
     # Take slice of data at specified time frame
-    morton12.image(time=52, slit_coords=None, savefig=None)
+#    morton12.image(time=52, slit_coords=None, savefig=None)
 #    morton12.image(52, slit_coords=slit_coords, multi_slit=True, savefig=None)
 
     # Create distance-time dataset along slit for the given time_range
@@ -129,13 +131,43 @@ if do_fibril_inversion is True:
         raise ValueError('unit must be "pix" or "km" in boundary_data.py')
 
     # Fit sinusoids to top and bottom boundary data
-    sin_fit = fibril.sin_fitting(N=N, p0=p0, plot=True,
-                                 savefig=["plots/" + fibril_number + "_detrend_b.png", "plots/" + fibril_number + "_detrend_t.png"])
-    
+    sin_fit = fibril.sin_fitting(N=N, p0=p0, plot=True)#,
+#                                 savefig=["plots/" + fibril_number + "_detrend_b.png", "plots/" + fibril_number + "_detrend_t.png"])
+
     # Plot the trend
     fibril.trend_plot(N, savefig="plots/" + fibril_number + "_trend.png")
 
     # Alfven speed inversion for 100 initial values to check for consistency
-    for vA_guess in range(1, 100):
-        print(fibril.AR_inversion(p0, N, vA_guess, c_phase, c0, R1, R2,
-                                  mode)[0])
+    # Number of initial values tried
+    N_init = 100
+
+    # Range of initial values
+    vA_init_min = 1
+    vA_init_max = 100
+    vA_init = np.linspace(vA_init_min, vA_init_max, N_init)
+
+    # Initialise the vector for inverted values
+    vA_inversion_vec = np.zeros_like(vA_init)
+
+    for i, vA_guess in enumerate(vA_init):
+        vA_inversion_exact = fibril.AR_inversion(p0, N, vA_guess, c_phase, c0,
+                                                  R1, R2, mode)[0]
+        vA_inversion_rounded = round(vA_inversion_exact, 2)
+        vA_inversion_vec[i] = abs(vA_inversion_rounded)
+
+#    vA_inversion_vec = abs(vA_inversion_vec)
+
+    # calculate the mode of the above vector of inversions
+    vA_inversion = stats.mode(vA_inversion_vec)
+    threshold_inversion_proportion = 0.9
+
+    # Indicators for multiple roots
+    if len(vA_inversion[0]) > 1:
+        print('WARNING: There was more than one mode.')
+    elif vA_inversion[1][0] / len(vA_inversion_vec) < threshold_inversion_proportion:
+        print('WARNING: The most common inversion accounted for less than ' +
+              str(threshold_inversion_proportion) + '.')
+
+    print('Estimated vA in ' + fibril_number + ' is: ' +
+          str(vA_inversion[0]) + '.\nIt appeared ' + str(vA_inversion[1]) +
+          ' out of ' + str(len(vA_inversion_vec)) + ' inversions.')

@@ -23,8 +23,8 @@ plot_density_range = False
 # Uncomment the things you want
 #show_time_distance_data = True
 do_fibril_inversion = True
-include_density_range = True
-plot_density_range = True
+#include_density_range = True
+#plot_density_range = True
 
 ############################################################
 # Specify slit coordinates - place slit perpendicular to dark fibril
@@ -190,7 +190,8 @@ if do_fibril_inversion is True:
                 # Calculate inversion ratios R, R2
                 vA_inv_i = fibril.AR_inversion_multiple_init(p0, N,vA_inits, c_phase, c0, R, R2, mode)
                 vA_inversion[i, :] = vA_inv_i
-                print('\nEstimated vA in ' + fibril_number + ' is: ' +
+                print('\nEstimated vA in ' + fibril_number + ' at [R1, R2]=[' +
+                      str(round(R, 2)) + ', ' + str(R2) + '] is: ' +
                       str(vA_inversion[i, 0]) + '.\nThis value was output for ' +
                       str(vA_inversion[i, 1]) + ' of the ' + str(N_vA_init) + ' initial' +
                       ' values.')
@@ -200,12 +201,11 @@ if do_fibril_inversion is True:
                 # Calculate inversion ratios R1, R
                 vA_inv_i = fibril.AR_inversion_multiple_init(p0, N,vA_inits, c_phase, c0, R1, R, mode)
                 vA_inversion[i, :] = vA_inv_i
-                print('\nEstimated vA in ' + fibril_number + ' is: ' +
+                print('\nEstimated vA in ' + fibril_number + ' at [R1, R2]=[' +
+                      str(R1) + ', ' + str(round(R, 2)) + '] is: ' +
                       str(vA_inversion[i, 0]) + '.\nThis value was output for ' +
                       str(vA_inversion[i, 1]) + ' of the ' + str(N_vA_init) + ' initial' +
                       ' values.')
         
         if plot_density_range is True:
             plt.plot(R_range, vA_inversion[:,0])
-            
-        

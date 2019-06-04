@@ -15,6 +15,7 @@ import fibril_inversion as fi
 from boundary_data import *
 import matplotlib.pyplot as plt
 
+
 show_time_distance_data = False
 do_fibril_inversion = False
 include_density_range = False
@@ -208,4 +209,4 @@ if do_fibril_inversion is True:
                       ' values.')
         
         if plot_density_range is True:
-            plt.plot(R_range, vA_inversion[:,0])
+            plt.plot(R_range, vA_inversion[:, 0])

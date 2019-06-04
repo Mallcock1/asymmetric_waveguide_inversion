@@ -16,8 +16,6 @@ import gauss_fitting as gf
 from astropy.io import fits
 from astropy.convolution import convolve, Box1DKernel
 # Nb: the above overrides pylab's convolve
-import warnings
-warnings.filterwarnings("ignore")
 
 
 class Full_map:

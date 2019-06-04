@@ -5,7 +5,6 @@ SP2RC, University of Sheffield
 
 Fibril boundary data from Morton et al 2012 ROSA data
 
-
 BEWARE: time data might not match exactly with boundary data. This was caused
 by migrating data to csv files and is yet to be fixed.
 """

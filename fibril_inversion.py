@@ -271,8 +271,8 @@ class Fibril:
             RA = abs(RA)
 
         if mode == "saus" and RA >= 0:
-            warnings.warn("Warning: You have identified this mode as 'saus' "
-                          "but it has a ...........Message")
+            warnings.warn("Warning: You have identified this mode as saus "
+                          "but it has positive amplitude ratio.")
 
         vA_sol = asi.alfven_AR_inversion(w, k, vA_guess, c0, R1, R2, x0, RA,
                                          mode)

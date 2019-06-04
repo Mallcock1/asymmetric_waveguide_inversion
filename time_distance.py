@@ -6,10 +6,11 @@ SP2RC, University of Sheffield
 Significantly adapted from an earlier code by Farhad Allian.
 """
 
-import matplotlib.pyplot as plt
 import os
-import matplotlib.animation as animation
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import scipy.ndimage
 import gauss_fitting as gf
 from astropy.io import fits
@@ -32,7 +33,8 @@ class Full_map:
         self.file_path = os.path.abspath(file_path)
         hdul_list = []
         for i in range(238):
-            hdul_list.append(fits.open(file_path + "/destretched_" + "%04d" % i + ".fits"))
+            hdul_list.append(fits.open(file_path + "/destretched_" +
+                                       "%04d" % i + ".fits"))
         self.total_maps = hdul_list
         # set time range to whole time range if None
         if time_range is None:
@@ -110,14 +112,11 @@ class Full_map:
                     plt.plot(s_c[:2]*p, s_c[2:]*p, color='white')
                     if multi_slit is True:
                         # testing moving average slits
-                        x0 = s_c[0]
-                        x1 = s_c[1]
-                        y0 = s_c[2]
-                        y1 = s_c[3]
+                        x0, x1, y0, y1 = s_c
 
                         m_prime = (x0 - x1) / (y1 - y0)
 
-                        alpha = 5.  # / np.sqrt(1 + m_prime**2)
+                        alpha = 5.
                         for i in range(1, 3):
                             plt.plot([(x0 + i*alpha)*p, (x1 + i*alpha)*p],
                                      [(y0 + i*alpha*m_prime)*p, (y1 + i*alpha*m_prime)*p],
@@ -235,8 +234,6 @@ class Full_map:
         x = np.linspace(slit_coords[0], slit_coords[1], num)
         y = np.linspace(slit_coords[2], slit_coords[3], num)
 
-#        x = np.arange(slit_coords[0], slit_coords[1])
-#        y = np.arange(slit_coords[2], slit_coords[3])
         map_coords = scipy.ndimage.map_coordinates
         if moving_average is True:
             """
@@ -303,7 +300,7 @@ class Full_map:
     def find_boundaries(self, slit_coords, moving_average=False,
                         wtd_av_distance=1., num_wtd_av=5,
                         p0=[0.5, 45., 10., -1.1], stabilise=False,
-                        plot=False, savefig=None):
+                        savedata=None, plot=False, savefig=None):
         """
         Find boundaries of the structure using gauss fitting. The edges are the
         half-maximum points on each side of the structure.
@@ -311,6 +308,7 @@ class Full_map:
         Inputs:
             slit_coords = [xinit, xfinal, yinit, yfinal],
             p0 = initial [amplitude, mean, standard deviation, offset],
+            savedata = None (not saved) or saved name string.
             savefig = None (not saved) or saved name string.
         """
         time_range_s = [self.time_range[0] * self.cadence,
@@ -329,7 +327,6 @@ class Full_map:
         boundary_x_vals_b = []
 
         FWHM_factor = np.sqrt(2*np.log(2))
-        success = False
         for i, t in enumerate(time_vals):
             t = int(t)
             if stabilise is False:
@@ -378,11 +375,11 @@ class Full_map:
                     params = gf.gauss_fit(data_to_fit, p0=p0, output="params")
                 except RuntimeError:
                     pass
-    
+
                 # bottom and top x_vals
                 bot = (params[1] - np.sqrt(2*np.log(2))*params[2])*self.pixel_size
                 top = (params[1] + np.sqrt(2*np.log(2))*params[2])*self.pixel_size
-    
+
                 # Just append the first one
                 if i == 0:
                     boundary_t_vals.append(t * self.cadence)
@@ -394,104 +391,39 @@ class Full_map:
                         boundary_t_vals.append(t * self.cadence)
                         boundary_x_vals_b.append(bot)
                         boundary_x_vals_t.append(top)
-    
+
                         p0 = params
                     else:
                         # crop distance range to just around previous boundaries
                         bot_boundary_prev = int(np.round(p0[1] - FWHM_factor*p0[2]))
                         top_boundary_prev = int(np.round(p0[1] + FWHM_factor*p0[2]))
-                        
+
                         bot_of_data = max(bot_boundary_prev - stabilise, 0)
                         top_of_data = min(top_boundary_prev + stabilise,
                                           len(-intensity[t]))
-    
+
                         data_to_fit = -intensity[t][bot_of_data:top_of_data]
-    
+
                         p0[1] = p0[1] - bot_of_data
                         try:
                             params = gf.gauss_fit(data_to_fit, p0=p0,
                                                   output="params")
-    
+
                             p0_new = params
                             p0_new[1] = p0_new[1] + bot_of_data
-    
+
                             bot = (p0_new[1] - FWHM_factor*p0_new[2])*self.pixel_size
                             top = (p0_new[1] + FWHM_factor*p0_new[2])*self.pixel_size
-    
+
                             # if big jump in width, just skip and use prev params for next
                             if top - bot < 2.5*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
                                 boundary_t_vals.append(t * self.cadence)
                                 boundary_x_vals_b.append(bot)
                                 boundary_x_vals_t.append(top)
-    
+
                                 p0 = p0_new
                         except RuntimeError:
                             pass
-                
-                
-                
-                
-                
-                
-                
-                
-#                if success is False:
-#                    data_to_fit = -intensity[t]
-#                    # Skip points which raise errors in gauss fitting.
-#                    try:
-#                        if p0[1] is None:
-#                            # set initial guess at gaussian mean to be argmax of 
-#                            # intensity
-#                            p0[1] = np.argmax(data_to_fit)
-#                        params = gf.gauss_fit(data_to_fit, p0=p0,
-#                                              output="params")
-#                        success = True
-#    
-#                        # bottom and top x_vals
-#                        bot = (params[1] - FWHM_factor*params[2])*self.pixel_size
-#                        top = (params[1] + FWHM_factor*params[2])*self.pixel_size
-#    
-#                        boundary_t_vals.append(t * self.cadence)
-#                        boundary_x_vals_b.append(bot)
-#                        boundary_x_vals_t.append(top)
-#                        
-#                        p0 = params
-#                    except RuntimeError:
-#                        pass
-#                else:
-                    ###############################
-                    # Crop gaussian range if jump
-                    ###############################
-#                    # crop distance range to just around previous boundaries
-#                    bot_boundary_prev = int(np.round(p0[1] - FWHM_factor*p0[2]))
-#                    top_boundary_prev = int(np.round(p0[1] + FWHM_factor*p0[2]))
-#                    
-#                    bot_of_data = max(bot_boundary_prev - stabilise, 0)
-#                    top_of_data = min(top_boundary_prev + stabilise,
-#                                      len(-intensity[t]))
-#
-#                    data_to_fit = -intensity[t][bot_of_data:top_of_data]
-#
-#                    p0[1] = p0[1] - bot_of_data
-#                    try:
-#                        params = gf.gauss_fit(data_to_fit, p0=p0,
-#                                              output="params")
-#
-#                        p0_new = params
-#                        p0_new[1] = p0_new[1] + bot_of_data
-#
-#                        bot = (p0_new[1] - FWHM_factor*p0_new[2])*self.pixel_size
-#                        top = (p0_new[1] + FWHM_factor*p0_new[2])*self.pixel_size
-#
-#                        # if big jump in width, just skip and use prev params for next
-#                        if top - bot < 2.5*(boundary_x_vals_t[-1] - boundary_x_vals_b[-1]):
-#                            boundary_t_vals.append(t * self.cadence)
-#                            boundary_x_vals_b.append(bot)
-#                            boundary_x_vals_t.append(top)
-#
-#                            p0 = p0_new
-#                    except RuntimeError:
-#                        pass
 
         if plot is True:
             num = np.sqrt((slit_coords[1] - slit_coords[0])**2
@@ -508,6 +440,18 @@ class Full_map:
             plt.ylim([0, num*self.pixel_size])
             if savefig is not None:
                 plt.savefig(savefig)
+
+        if savedata is not None:
+            # Create a dictionary of the data
+            data = {'Top boundary': boundary_x_vals_t,
+                    'Bottom boundary': boundary_x_vals_b,
+                    'Time': boundary_t_vals,
+                    }
+            # Turn it into a pandas dataframe
+            df = pd.DataFrame(data, columns=['Top boundary', 'Bottom boundary',
+                                             'Time'])
+            # Export to .csv file
+            df.to_csv('fibril_boundary_data.csv', index=None, header=True)
 
         return [boundary_x_vals_b, boundary_x_vals_t, boundary_t_vals]
 
@@ -575,7 +519,7 @@ class Full_map:
         y0 = slit_coords[2]
         y1 = slit_coords[3]
         m_prime = (x0 - x1) / (y1 - y0)
-        alpha = slit_distance  # / np.sqrt(1 + m_prime**2)
+        alpha = slit_distance
         for i in range(1, int((num_slits + 1) / 2)):
             x0_r = x0 + i*alpha
             x1_r = x1 + i*alpha
@@ -621,7 +565,7 @@ class Full_map:
                 plt.savefig(savefig)
 
         return multi_boundaries
-    
+
     def find_multi_slit_axis(self, slit_coords, num_slits=1,
                              slit_distance=1., moving_average=False,
                              wtd_av_distance=1., num_wtd_av=5,
@@ -643,22 +587,18 @@ class Full_map:
                                                            wtd_av_distance=wtd_av_distance,
                                                            num_wtd_av=num_wtd_av,
                                                            p0=p0, stabilise=stabilise)
-        
+
         multi_axis = []
-        for i,mb in enumerate(multi_boundaries):
+        for i, mb in enumerate(multi_boundaries):
             multi_axis.append([(np.array(mb[0]) + np.array(mb[1]))/2,
                                np.array(mb[2])])
-            
+
         if plot is True:
-#            num = np.sqrt((slit_coords[1] - slit_coords[0])**2
-#                          + (slit_coords[3] - slit_coords[2])**2)
             plt.figure()
 
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
-#            plt.ylim([0, num*self.pixel_size])
-#            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
-            color_list = [(0,0,0), (0.5,0,0), (1,0,0)]
+            color_list = [(0, 0, 0), (0.5, 0, 0), (1, 0, 0)]
             for i, ma in enumerate(multi_axis):
                 ma_shift = ma[0] + i*slit_distance*self.pixel_size
                 plt.errorbar(ma[1], ma_shift, yerr=self.pixel_size,
@@ -669,20 +609,20 @@ class Full_map:
                 plt.savefig(savefig)
 
         return multi_axis
-    
+
     def find_multi_slit_axis_min_intens(self, slit_coords, num_slits=1,
-                                   slit_distance=1., moving_average=False,
-                                   wtd_av_distance=1., num_wtd_av=5,
-                                   p0=[0.5, 45., 10., -1.1], stabilise=False,
-                                   plot=False, savefig=None):
+                                        slit_distance=1., moving_average=False,
+                                        wtd_av_distance=1., num_wtd_av=5,
+                                        p0=[0.5, 45., 10., -1.1],
+                                        stabilise=False, plot=False,
+                                        savefig=None):
         """
         Inputs:
             slit_coords = [xinit, xfinal, yinit, yfinal],
             p0 = initial [amplitude, mean, standard deviation, offset],
             savefig = None (not saved) or saved name string.
         """
-        time_range_s = [self.time_range[0] * self.cadence,
-                        self.time_range[1] * self.cadence]  # in s
+
         number_of_frames = self.time_range[1] - self.time_range[0]
         time_vals = np.linspace(self.time_range[0], self.time_range[1],
                                 number_of_frames + 1)
@@ -708,7 +648,6 @@ class Full_map:
             plt.ylabel('Distance (km)')
             plt.ylim([0, num*self.pixel_size])
             plt.plot(time_vals, multi_axis, 'o')
-#            plt.plot(boundary[2], convolve(boundary_shift_b, Box1DKernel(3)))
             if savefig is not None:
                 plt.savefig(savefig)
 
@@ -732,15 +671,12 @@ class Full_map:
                            np.array(mb[2])])
 
         if plot is True:
-#            num = np.sqrt((slit_coords[1] - slit_coords[0])**2
-#                          + (slit_coords[3] - slit_coords[2])**2)
             plt.figure()
 
             plt.xlabel('Time (s)')
             plt.ylabel('Distance (km)')
-#            plt.ylim([0, num*self.pixel_size])
-            color_list = [(0,0,0), (0.25,0,0), (0.5,0,0), (0.75,0,0), (1,0,0)]
-#            color_list = [(0,0,0), (0.5,0,0), (1,0,0)]
+            color_list = [(0, 0, 0), (0.25, 0, 0), (0.5, 0, 0), (0.75, 0, 0),
+                          (1, 0, 0)]
             for i, width in enumerate(widths):
                 width_shift = width[0] + i*slit_distance*self.pixel_size
                 plt.errorbar(width[1], width_shift, yerr=self.pixel_size,

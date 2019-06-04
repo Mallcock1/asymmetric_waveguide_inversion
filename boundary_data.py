@@ -4,6 +4,10 @@ Matthew Allcock
 SP2RC, University of Sheffield
 
 Fibril boundary data from Morton et al 2012 ROSA data
+
+
+BEWARE: time data might not match exactly with boundary data. This was caused
+by migrating data to csv files and is yet to be fixed.
 """
 
 import numpy as np
@@ -21,12 +25,11 @@ fibril_1 = True
 #fibril_4 = True
 #fibril_5 = True
 
+# Parameters for all fibrils:
 # Temporal resolution of the ROSA instrument in s
 cad = 7.68
-
 # Degree of the trend polynomial
 N = 3
-
 # Initial parameters for Gaussian fitting
 p0_gauss = [0.1, None, 10., -1.0]
 

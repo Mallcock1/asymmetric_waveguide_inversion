@@ -190,8 +190,9 @@ class Fibril:
             t_vals_sub = self.t_vals_sub[1:]
         else:
             t_vals_sub = self.t_vals_sub
-        
-        def sin_func(x, a, b, c):  # a=amplitude, b=angular frequency
+
+        def sin_func(x, a, b, c):
+            # a=amplitude, b=angular frequency, c=y offset
             return a * np.sin(b * x + c)
 
         # different p0 for top and bottom
@@ -208,10 +209,6 @@ class Fibril:
         yt_params, yt_params_covar = curve_fit(sin_func, t_vals_sub,
                                                self.detrend(N, trend_type)[1],
                                                p0=p0_t)
-#        print("\nTOP: Amp = " "%.4g" % yt_params[0] + " km, Freq = "
-#              "%.4g" % yt_params[1] + " s-1 \n\nBOTTOM: Amp = "
-#              "%.4g" % yb_params[0] + " km, Freq = "
-#              "%.4g" % yb_params[1] + " s-1\n")
 
         sin_fit = [sin_func(self.t_vals_cont_sub, yb_params[0], yb_params[1],
                             yb_params[2]), yb_params,
@@ -220,7 +217,7 @@ class Fibril:
         if plot is True:
             y_lim = max(max(self.detrend(N, trend_type)[0]),
                         max(self.detrend(N, trend_type)[1])) + self.pixel_size
-            
+
             # Bottom boundary oscillation
             plt.figure()
             plt.errorbar(t_vals_sub, self.detrend(N, trend_type)[0],

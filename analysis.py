@@ -56,7 +56,7 @@ if show_time_distance_data is True:
     morton12.animate(slit_coords=slit_coords, interval=100)#,
 #                     savefig="plots/ani_all.mp4")  # "plots/animation.mp4")
 #    morton12.animate(slit_coords=slit_coords, interval=100,
-#                     savefig="plots/" + fibril_number + "_ani.mp4")  # "plots/animation.mp4")
+#                     savefig="plots/fibril" + fibril_number + "_ani.mp4")  # "plots/animation.mp4")
 
     # Take slice of data at specified time frame
 #    morton12.image(time=52, slit_coords=None, savefig=None)
@@ -64,7 +64,7 @@ if show_time_distance_data is True:
 
     # Create distance-time dataset along slit for the given time_range
 #    morton12.distancetime(slit_coords=slit_coords, plot=True)
-#                          savefig="plots/" + fibril_number + "_dt.png")
+#                          savefig="plots/fibril" + fibril_number + "_dt.png")
 
     # Take a slice of the intensity across the slit at a given time
 #    morton12.intensity_slice(slit_coords=slit_coords, time_slice=[130],
@@ -75,7 +75,7 @@ if show_time_distance_data is True:
 #    boundaries = morton12.find_boundaries(slit_coords=slit_coords,
 #                                          moving_average=True, num_wtd_av=3,
 #                                          p0=p0_gauss, stabilise=stabilise,
-#                                          plot=True, savefig="plots/" + fibril_number + "_dt.png")
+#                                          plot=True, savefig="plots/fibril" + fibril_number + "_dt.png")
 #    multi_boundaries = morton12.find_multi_slit_boundaries(slit_coords=slit_coords,
 #                                                           num_slits=5,
 #                                                           slit_distance=10., moving_average=False,
@@ -89,7 +89,7 @@ if show_time_distance_data is True:
 #                                             moving_average=True, num_wtd_av=3,
 #                                             num_slits=5, slit_distance=5.,
 #                                             p0=p0_gauss, stabilise=stabilise,
-#                                             plot=True)#, savefig="plots/" + fibril_number + "_widths.png")
+#                                             plot=True)#, savefig="plots/fibril" + fibril_number + "_widths.png")
 
 #    multi_axes = morton12.find_multi_slit_axis_min_intens(slit_coords=slit_coords,
 #                                             moving_average=True, num_wtd_av=3,
@@ -137,10 +137,10 @@ if do_fibril_inversion is True:
 
     # Fit sinusoids to top and bottom boundary data
     sin_fit = fibril.sin_fitting(N=N, p0=p0)#, plot=True)#,
-#                                 savefig=["plots/" + fibril_number + "_detrend_b.png", "plots/" + fibril_number + "_detrend_t.png"])
+#                                 savefig=["plots/fibril" + fibril_number + "_detrend_b.png", "plots/fibril" + fibril_number + "_detrend_t.png"])
 
     # Plot the trend
-#    fibril.trend_plot(N, savefig="plots/" + fibril_number + "_trend.png")
+#    fibril.trend_plot(N, savefig="plots/fibril" + fibril_number + "_trend.png")
 
     # Alfven speed inversion for 100 initial values to check for consistency
     # Number of initial vA values tried
@@ -155,7 +155,7 @@ if do_fibril_inversion is True:
         vA_inversion = fibril.AR_inversion_multiple_init(p0, N, vA_inits,
                                                          c_phase, c0, R1, R2,
                                                          mode)
-        print('Estimated vA in ' + fibril_number + ' is: ' +
+        print('Estimated vA in fibril ' + fibril_number + ' is: ' +
               str(vA_inversion[0]) + '.\nThis value was output for ' +
               str(vA_inversion[1]) + ' of the ' + str(N_vA_init) + ' initial' +
                   ' values.')
@@ -190,7 +190,7 @@ if do_fibril_inversion is True:
                 # Calculate inversion ratios R, R2
                 vA_inv_i = fibril.AR_inversion_multiple_init(p0, N,vA_inits, c_phase, c0, R, R2, mode)
                 vA_inversion[i, :] = vA_inv_i
-                print('\nEstimated vA in ' + fibril_number + ' at [R1, R2]=[' +
+                print('\nEstimated vA in fibril ' + fibril_number + ' at [R1, R2]=[' +
                       str(round(R, 2)) + ', ' + str(R2) + '] is: ' +
                       str(vA_inversion[i, 0]) + '.\nThis value was output for ' +
                       str(vA_inversion[i, 1]) + ' of the ' + str(N_vA_init) + ' initial' +
@@ -201,7 +201,7 @@ if do_fibril_inversion is True:
                 # Calculate inversion ratios R1, R
                 vA_inv_i = fibril.AR_inversion_multiple_init(p0, N,vA_inits, c_phase, c0, R1, R, mode)
                 vA_inversion[i, :] = vA_inv_i
-                print('\nEstimated vA in ' + fibril_number + ' at [R1, R2]=[' +
+                print('\nEstimated vA in fibril ' + fibril_number + ' at [R1, R2]=[' +
                       str(R1) + ', ' + str(round(R, 2)) + '] is: ' +
                       str(vA_inversion[i, 0]) + '.\nThis value was output for ' +
                       str(vA_inversion[i, 1]) + ' of the ' + str(N_vA_init) + ' initial' +

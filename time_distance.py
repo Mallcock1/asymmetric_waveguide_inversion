@@ -79,14 +79,14 @@ class Full_map:
 
         im = plt.imshow(self.total_maps[time][0].data,
                         aspect='auto', interpolation=None, origin='lower',
-                        extent=[self.bottom_left[1]*p, self.top_right[1]*p,
-                                self.bottom_left[0]*p, self.top_right[0]*p],
+                        extent=[self.bottom_left[1], self.top_right[1],
+                                self.bottom_left[0], self.top_right[0]],
                         cmap="afmhot")
 
         if slit_coords is not None:
             if type(slit_coords[0]) is not list:
                 slit_coords = np.array(slit_coords)
-                plt.plot(slit_coords[:2]*p, slit_coords[2:]*p, color='white')
+                plt.plot(slit_coords[:2], slit_coords[2:], color='white')
                 if multi_slit is True:
                     # testing moving average slits
                     x0 = slit_coords[0]
@@ -98,16 +98,16 @@ class Full_map:
 
                     alpha = 1.  # / np.sqrt(1 + m_prime**2)
                     for i in range(1, 2):
-                        plt.plot([(x0 + i*alpha)*p, (x1 + i*alpha)*p],
-                                 [(y0 + i*alpha*m_prime)*p, (y1 + i*alpha*m_prime)*p],
+                        plt.plot([(x0 + i*alpha), (x1 + i*alpha)],
+                                 [(y0 + i*alpha*m_prime), (y1 + i*alpha*m_prime)],
                                  color='white')
-                        plt.plot([(x0 - i*alpha)*p, (x1 - i*alpha)*p],
-                                 [(y0 - i*alpha*m_prime)*p, (y1 - i*alpha*m_prime)*p],
+                        plt.plot([(x0 - i*alpha), (x1 - i*alpha)],
+                                 [(y0 - i*alpha*m_prime), (y1 - i*alpha*m_prime)],
                                  color='white')
             else:
                 for s_c in slit_coords:
                     s_c = np.array(s_c)
-                    plt.plot(s_c[:2]*p, s_c[2:]*p, color='white')
+                    plt.plot(s_c[:2], s_c[2:], color='white')
                     if multi_slit is True:
                         # testing moving average slits
                         x0, x1, y0, y1 = s_c
@@ -116,11 +116,11 @@ class Full_map:
 
                         alpha = 5.
                         for i in range(1, 3):
-                            plt.plot([(x0 + i*alpha)*p, (x1 + i*alpha)*p],
-                                     [(y0 + i*alpha*m_prime)*p, (y1 + i*alpha*m_prime)*p],
+                            plt.plot([(x0 + i*alpha), (x1 + i*alpha)],
+                                     [(y0 + i*alpha*m_prime), (y1 + i*alpha*m_prime)],
                                      color='yellow')
-                            plt.plot([(x0 - i*alpha)*p, (x1 - i*alpha)*p],
-                                     [(y0 - i*alpha*m_prime)*p, (y1 - i*alpha*m_prime)*p],
+                            plt.plot([(x0 - i*alpha), (x1 - i*alpha)*p],
+                                     [(y0 - i*alpha*m_prime), (y1 - i*alpha*m_prime)],
                                      color='green')
         plt.xlabel('Distance (km)')
         plt.ylabel('Distance (km)')

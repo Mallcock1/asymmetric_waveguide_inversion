@@ -22,8 +22,8 @@ include_density_range = False
 plot_density_range = False
 
 # Uncomment the things you want
-#show_time_distance_data = True
-do_fibril_inversion = True
+show_time_distance_data = True
+#do_fibril_inversion = True
 #include_density_range = True
 #plot_density_range = True
 
@@ -60,7 +60,7 @@ if show_time_distance_data is True:
 #                     savefig="plots/fibril" + fibril_number + "_ani.mp4")  # "plots/animation.mp4")
 
     # Take slice of data at specified time frame
-#    morton12.image(time=52, slit_coords=None, savefig=None)
+    morton12.image(time=165, slit_coords=slit_coords, savefig=None)
 #    morton12.image(52, slit_coords=slit_coords, multi_slit=True, savefig=None)
 
     # Create distance-time dataset along slit for the given time_range
